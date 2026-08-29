@@ -19,28 +19,26 @@
   --dim:#8ba0a9;
   --faint:#5d7079;
   --amber:#f0a53c;
-  --amber-deep:#b8721f;
   --data:#6fb6cf;
   --nominal:#7fd6a6;
   --alert:#e2604f;
-  --cell:clamp(34px,4vw,60px);
-  --cols:10;
-  --rows:7;
+  --sys-command:#3f7086;
+  --sys-structure:#4c5a62;
+  --sys-prop:#8d5c2b;
+  --sys-power:#3e7f5f;
+  --sys-utility:#6a5470;
+  --cell:clamp(34px,4.4vw,58px);
   --f-disp:"Saira Condensed","Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
   --f-body:"Archivo","Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
   --f-mono:"IBM Plex Mono","Zen Kaku Gothic New",ui-monospace,Menlo,monospace;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0;padding:0}
 body{
-  background:var(--void);
-  color:var(--ink);
-  font-family:var(--f-body);
-  font-size:14px;
-  line-height:1.5;
-  -webkit-font-smoothing:antialiased;
-  min-height:100vh;
+  background:var(--void);color:var(--ink);font-family:var(--f-body);
+  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;
 }
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 :focus-visible{outline:2px solid var(--amber);outline-offset:2px}
@@ -48,143 +46,111 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 /* ---------- masthead ---------- */
 .masthead{
   display:flex;align-items:center;gap:20px;flex-wrap:wrap;
-  padding:14px clamp(12px,2.4vw,26px);
-  border-bottom:1px solid var(--rule);
+  padding:14px clamp(12px,2.4vw,26px);border-bottom:1px solid var(--rule);
   background:linear-gradient(180deg,#121b21,#0d151a);
 }
 .mark{display:flex;align-items:baseline;gap:10px}
-.mark b{
-  font-family:var(--f-disp);font-weight:700;font-size:23px;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--ink);
-}
-.mark span{
-  font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;color:var(--faint);
-  text-transform:uppercase;
-}
+.mark b{font-family:var(--f-disp);font-weight:700;font-size:23px;letter-spacing:.14em;text-transform:uppercase}
+.mark span{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase}
 .mast-spacer{flex:1}
 .purse{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 .meter{display:flex;flex-direction:column;gap:1px}
-.meter i{
-  font-style:normal;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.18em;
-  color:var(--faint);text-transform:uppercase;
-}
-.meter b{
-  font-family:var(--f-mono);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;
-  color:var(--amber);
-}
+.meter i{font-style:normal;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase}
+.meter b{font-family:var(--f-mono);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--amber)}
 .meter.small b{font-size:14px;color:var(--ink)}
 
-/* ---------- console layout ---------- */
+/* ---------- layout ---------- */
 .console{
   display:grid;
   grid-template-columns:minmax(228px,258px) minmax(0,1fr) minmax(268px,306px);
-  gap:1px;
-  background:var(--rule-soft);
-  min-height:calc(100vh - 58px);
-  align-items:stretch;
+  gap:1px;background:var(--rule-soft);min-height:calc(100vh - 58px);align-items:stretch;
 }
 .pane{background:var(--deck);padding:16px clamp(10px,1.4vw,18px);min-width:0}
-.pane-head{
-  display:flex;align-items:center;gap:9px;
-  padding-bottom:9px;margin-bottom:13px;border-bottom:1px solid var(--rule);
-}
-.pane-head h2{
-  margin:0;font-family:var(--f-disp);font-weight:600;font-size:14px;
-  letter-spacing:.2em;text-transform:uppercase;color:var(--dim);
-}
-.pane-head .tag{
-  margin-left:auto;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.12em;
-  color:var(--faint);text-transform:uppercase;
-}
+.pane-head{display:flex;align-items:center;gap:9px;padding-bottom:9px;margin-bottom:13px;border-bottom:1px solid var(--rule)}
+.pane-head h2{margin:0;font-family:var(--f-disp);font-weight:600;font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+.pane-head .tag{margin-left:auto;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.12em;color:var(--faint);text-transform:uppercase}
 
 /* ---------- parts bin ---------- */
 .bin{max-height:calc(100vh - 58px);overflow-y:auto;scrollbar-width:thin}
 .bin::-webkit-scrollbar{width:8px}
-.bin::-webkit-scrollbar-thumb{background:var(--rule);border-radius:0}
-.cat{
-  font-family:var(--f-mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--faint);margin:16px 0 7px;display:flex;align-items:center;gap:8px;
-}
+.bin::-webkit-scrollbar-thumb{background:var(--rule)}
+.cat{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin:16px 0 7px;display:flex;align-items:center;gap:8px}
 .cat:first-of-type{margin-top:0}
 .cat::after{content:"";flex:1;height:1px;background:var(--rule-soft)}
 .bin-list{display:flex;flex-direction:column;gap:5px}
 .chip{
-  display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;
-  width:100%;text-align:left;padding:7px 9px;
+  display:grid;grid-template-columns:6px 34px 1fr auto;align-items:center;gap:9px;
+  width:100%;text-align:left;padding:7px 0 7px 0;
   background:var(--plate);border:1px solid var(--rule-soft);
-  transition:background .12s,border-color .12s,transform .1s;
+  transition:background .12s,border-color .12s;
 }
+.chip .swatch{align-self:stretch;background:var(--sys);min-height:26px}
 .chip:hover:not(.locked){background:var(--plate-hi);border-color:var(--rule)}
-.chip:active:not(.locked){transform:translateY(1px)}
-.chip.held{border-color:var(--amber);background:#26241c;box-shadow:inset 0 0 0 1px rgba(240,165,60,.28)}
+.chip.held{border-color:var(--amber);background:#26241c}
 .chip.locked{opacity:.42;cursor:not-allowed}
 .chip .thumb{width:34px;height:26px;display:block}
 .chip .nm{min-width:0}
-.chip .nm b{
-  display:block;font-family:var(--f-body);font-weight:600;font-size:12.5px;
-  color:var(--ink);letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.chip .nm i{
-  font-style:normal;display:block;font-family:var(--f-mono);font-size:10px;
-  color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.chip .price{
-  font-family:var(--f-mono);font-size:11px;font-variant-numeric:tabular-nums;color:var(--amber);
-}
+.chip .nm b{display:block;font-weight:600;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip .nm i{font-style:normal;display:block;font-family:var(--f-mono);font-size:10px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip .price{font-family:var(--f-mono);font-size:11px;font-variant-numeric:tabular-nums;color:var(--amber);padding-right:9px}
 .chip.locked .price{color:var(--faint)}
-.chip .lockmsg{grid-column:1/-1;font-family:var(--f-mono);font-size:9.5px;color:var(--faint)}
+.chip .lockmsg{grid-column:2/-1;font-family:var(--f-mono);font-size:9.5px;color:var(--faint);padding-right:9px}
 
-/* ---------- drydock ---------- */
+/* ---------- dock ---------- */
 .bay-wrap{display:flex;flex-direction:column;gap:12px;min-width:0}
 .bay-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .shipname{
-  flex:1;min-width:130px;background:var(--plate);border:1px solid var(--rule);
-  color:var(--ink);font-family:var(--f-disp);font-size:16px;font-weight:600;
-  letter-spacing:.12em;text-transform:uppercase;padding:6px 10px;
+  flex:1;min-width:120px;background:var(--plate);border:1px solid var(--rule);color:var(--ink);
+  font-family:var(--f-disp);font-size:16px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:6px 10px;
 }
 .shipname:focus{border-color:var(--amber);outline:none}
 .btn{
-  font-family:var(--f-disp);font-weight:600;font-size:12px;letter-spacing:.14em;
-  text-transform:uppercase;padding:7px 13px;border:1px solid var(--rule);
-  background:var(--plate);color:var(--dim);transition:.13s;
+  font-family:var(--f-disp);font-weight:600;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+  padding:7px 13px;border:1px solid var(--rule);background:var(--plate);color:var(--dim);transition:.13s;
 }
 .btn:hover{background:var(--plate-hi);color:var(--ink);border-color:var(--faint)}
-.btn.go{
-  width:100%;padding:13px;font-size:15px;letter-spacing:.22em;
-  background:linear-gradient(180deg,#f0a53c,#c47c22);color:#180f02;border-color:#f0a53c;
-}
+.btn.on{border-color:var(--amber);color:var(--amber);background:#231e14}
+.btn.go{width:100%;padding:13px;font-size:15px;letter-spacing:.22em;background:linear-gradient(180deg,#f0a53c,#c47c22);color:#180f02;border-color:#f0a53c}
 .btn.go:hover{background:linear-gradient(180deg,#ffc067,#d68b26);color:#180f02}
-.btn.go[disabled]{
-  background:var(--plate);color:var(--faint);border-color:var(--rule);cursor:not-allowed;
-  box-shadow:none;
-}
+.btn.go[disabled]{background:var(--plate);color:var(--faint);border-color:var(--rule);cursor:not-allowed}
 
-.bay-frame{
-  position:relative;padding:16px 18px 14px;background:#0e161b;border:1px solid var(--rule);
-  overflow-x:auto;
+.tabs{display:flex;gap:1px;background:var(--rule-soft);border:1px solid var(--rule)}
+.tab{
+  flex:1;padding:8px 6px;background:var(--plate);display:flex;flex-direction:column;gap:2px;align-items:center;
+  transition:.13s;border-bottom:2px solid transparent;
 }
+.tab:hover{background:var(--plate-hi)}
+.tab b{font-family:var(--f-disp);font-size:13px;font-weight:600;letter-spacing:.1em;color:var(--dim)}
+.tab i{font-style:normal;font-family:var(--f-mono);font-size:9px;letter-spacing:.1em;color:var(--faint)}
+.tab.sel{background:#20303a;border-bottom-color:var(--amber)}
+.tab.sel b{color:var(--ink)}
+.tab.sel i{color:var(--amber)}
+
+.depth{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--rule);background:var(--plate);flex-wrap:wrap}
+.depth .lab{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase;white-space:nowrap}
+.depth .val{font-family:var(--f-mono);font-size:15px;font-variant-numeric:tabular-nums;color:var(--amber);min-width:54px;text-align:center}
+.depth .step{width:26px;height:24px;border:1px solid var(--rule);background:var(--deck);color:var(--dim);font-family:var(--f-mono);line-height:1}
+.depth .step:hover{color:var(--amber);border-color:var(--faint)}
+.depth input[type=range]{flex:1;min-width:80px;accent-color:var(--amber);background:transparent}
+.depth .note{font-family:var(--f-mono);font-size:10px;color:var(--faint);white-space:nowrap}
+
+.bay-frame{position:relative;padding:16px 18px 14px;background:#0e161b;border:1px solid var(--rule);overflow-x:auto}
 .bay-frame::before{
   content:"";position:absolute;inset:0;pointer-events:none;
-  background:
-    repeating-linear-gradient(90deg,rgba(111,182,207,.05) 0 1px,transparent 1px 22px),
-    repeating-linear-gradient(0deg,rgba(111,182,207,.05) 0 1px,transparent 1px 22px);
+  background:repeating-linear-gradient(90deg,rgba(111,182,207,.05) 0 1px,transparent 1px 22px),
+             repeating-linear-gradient(0deg,rgba(111,182,207,.05) 0 1px,transparent 1px 22px);
 }
 .bay-axis{
-  display:flex;justify-content:space-between;align-items:center;
-  font-family:var(--f-mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--faint);margin-bottom:9px;position:relative;
+  display:flex;justify-content:space-between;align-items:center;font-family:var(--f-mono);font-size:9.5px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:9px;position:relative;min-height:14px;
 }
 .bay-axis .bow{color:var(--data)}
 
 .grid{
-  position:relative;
-  display:grid;
+  position:relative;display:grid;
   grid-template-columns:repeat(var(--cols),var(--cell));
   grid-template-rows:repeat(var(--rows),var(--cell));
-  width:calc(var(--cols) * var(--cell));
-  margin:0 auto;
-  background:#0a1115;
-  border:1px solid var(--rule);
+  width:calc(var(--cols) * var(--cell));margin:0 auto;background:#0a1115;border:1px solid var(--rule);
 }
 .cell{
   grid-column:var(--cx);grid-row:var(--cy);
@@ -192,37 +158,26 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   background:transparent;padding:0;cursor:default;
 }
 .cell[data-lane="1"]{background:rgba(226,96,79,.05)}
+.cell[data-mid="1"]{box-shadow:inset 0 0 0 1px rgba(111,182,207,.14)}
 .grid.placing .cell{cursor:crosshair}
 .grid.placing .cell:hover{background:rgba(240,165,60,.09)}
 
 .ship{
-  position:absolute;inset:0;
-  display:grid;
+  position:absolute;inset:0;display:grid;
   grid-template-columns:repeat(var(--cols),var(--cell));
   grid-template-rows:repeat(var(--rows),var(--cell));
   pointer-events:none;
 }
-.part{
-  position:relative;pointer-events:auto;cursor:pointer;padding:0;border:none;background:none;
-  display:block;
-}
+.part{position:relative;padding:0;border:none;background:none;display:block;pointer-events:auto;cursor:pointer;z-index:2}
 .part svg{display:block;width:100%;height:100%;overflow:visible}
-.part:hover .p-hull{fill:#3b4d58}
-.part:hover::after{
-  content:"";position:absolute;inset:-1px;border:1px solid var(--amber);
-}
-.part.bad::before{
-  content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(226,96,79,.22) 0 6px,transparent 6px 12px);
-}
-.ghost{
-  position:absolute;pointer-events:none;opacity:.62;
-}
+.part:hover::after{content:"";position:absolute;inset:-1px;border:1px solid var(--amber)}
+.part.ghosted{pointer-events:none;z-index:1;filter:saturate(.35)}
+.part.bad::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(226,96,79,.24) 0 6px,transparent 6px 12px);z-index:3}
+.part.focus::after{content:"";position:absolute;inset:-2px;border:2px solid var(--alert)}
+.ghost{position:absolute;pointer-events:none;opacity:.62;z-index:4}
 .ghost.no{filter:grayscale(1)}
-.ghost.no::after{
-  content:"";position:absolute;inset:0;background:rgba(226,96,79,.3);
-}
+.ghost.no::after{content:"";position:absolute;inset:0;background:rgba(226,96,79,.3)}
 
-/* part art palette */
 .p-hull{fill:#2e3d46}
 .p-edge{fill:none;stroke:#546873;stroke-width:2}
 .p-deep{fill:#18232a}
@@ -230,12 +185,23 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .p-glass{fill:#3d7f96}
 .p-line{fill:none;stroke:#455b66;stroke-width:2}
 .p-mint{fill:#5aa87f}
+.b-face{fill:var(--sys)}
+.b-edge{fill:none;stroke:rgba(223,231,234,.34);stroke-width:2}
+.b-mark{fill:rgba(223,231,234,.5)}
+.b-glow{fill:var(--amber)}
 
-.hint{
-  font-family:var(--f-mono);font-size:10.5px;color:var(--faint);
-  display:flex;gap:16px;flex-wrap:wrap;margin-top:2px;
-}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--f-mono);font-size:10px;color:var(--faint);min-height:14px}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:9px;height:9px;display:block;background:var(--sys)}
+.hint{font-family:var(--f-mono);font-size:10.5px;color:var(--faint);display:flex;gap:16px;flex-wrap:wrap;margin:0}
 .hint b{color:var(--dim);font-weight:500}
+
+/* ---------- isometric ---------- */
+.iso-wrap{perspective:1500px;display:flex;align-items:center;justify-content:center;min-height:clamp(230px,36vh,360px)}
+.iso-scene{transform-style:preserve-3d;position:relative}
+.iso-pivot{transform-style:preserve-3d;position:absolute;top:0;left:0}
+.iso-face{position:absolute;top:0;left:0;transform-origin:0 0;border:1px solid rgba(6,10,13,.5)}
+.iso-empty{font-family:var(--f-mono);font-size:11.5px;color:var(--faint)}
 
 /* ---------- flight check ---------- */
 .check{display:flex;flex-direction:column;gap:14px;max-height:calc(100vh - 58px);overflow-y:auto;scrollbar-width:thin}
@@ -243,14 +209,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .check::-webkit-scrollbar-thumb{background:var(--rule)}
 .readout{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule-soft);border:1px solid var(--rule-soft)}
 .stat{background:var(--plate);padding:8px 10px;display:flex;flex-direction:column;gap:2px}
-.stat i{
-  font-style:normal;font-family:var(--f-mono);font-size:9px;letter-spacing:.15em;
-  color:var(--faint);text-transform:uppercase;
-}
-.stat b{
-  font-family:var(--f-mono);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;
-  color:var(--ink);line-height:1.2;
-}
+.stat i{font-style:normal;font-family:var(--f-mono);font-size:9px;letter-spacing:.15em;color:var(--faint);text-transform:uppercase}
+.stat b{font-family:var(--f-mono);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
 .stat b small{font-size:10px;color:var(--faint);font-weight:400;margin-left:3px}
 .stat.ok b{color:var(--nominal)}
 .stat.warn b{color:var(--alert)}
@@ -258,48 +218,28 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 
 .contract{border:1px solid var(--rule);background:var(--plate);padding:12px}
 .contract-nav{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.contract-nav button{
-  width:26px;height:24px;border:1px solid var(--rule);background:var(--deck);color:var(--dim);
-  font-family:var(--f-mono);font-size:13px;line-height:1;
-}
+.contract-nav button{width:26px;height:24px;border:1px solid var(--rule);background:var(--deck);color:var(--dim);font-family:var(--f-mono);font-size:13px;line-height:1}
 .contract-nav button:hover{color:var(--amber);border-color:var(--faint)}
-.contract-nav span{
-  flex:1;text-align:center;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.16em;
-  color:var(--faint);text-transform:uppercase;
-}
-.contract h3{
-  margin:0 0 3px;font-family:var(--f-disp);font-size:19px;font-weight:600;
-  letter-spacing:.06em;text-transform:uppercase;color:var(--ink);text-wrap:balance;
-}
+.contract-nav span{flex:1;text-align:center;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase}
+.contract h3{margin:0 0 3px;font-family:var(--f-disp);font-size:19px;font-weight:600;letter-spacing:.06em;text-wrap:balance}
 .contract .brief{margin:0 0 11px;font-size:12.5px;color:var(--dim);line-height:1.55}
 .reqs{display:flex;flex-direction:column;gap:4px;margin-bottom:11px}
-.req{
-  display:flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:11.5px;
-  color:var(--dim);font-variant-numeric:tabular-nums;
-}
+.req{display:flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums}
 .req .dot{width:7px;height:7px;flex:none;background:var(--alert)}
 .req.met .dot{background:var(--nominal)}
 .req.met{color:var(--ink)}
 .req .val{margin-left:auto;color:var(--faint)}
 .req.met .val{color:var(--nominal)}
-.payline{
-  display:flex;justify-content:space-between;align-items:baseline;
-  padding-top:9px;border-top:1px solid var(--rule-soft);
-  font-family:var(--f-mono);font-size:11px;color:var(--faint);letter-spacing:.08em;
-}
+.payline{display:flex;justify-content:space-between;align-items:baseline;padding-top:9px;border-top:1px solid var(--rule-soft);font-family:var(--f-mono);font-size:11px;color:var(--faint);letter-spacing:.08em}
 .payline b{color:var(--amber);font-size:15px}
-.done-stamp{
-  display:inline-block;margin-top:8px;font-family:var(--f-disp);font-size:11px;
-  letter-spacing:.18em;text-transform:uppercase;color:var(--nominal);
-  border:1px solid rgba(127,214,166,.4);padding:2px 7px;
-}
+.done-stamp{display:inline-block;margin-top:8px;font-family:var(--f-disp);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--nominal);border:1px solid rgba(127,214,166,.4);padding:2px 7px}
 
 .faults{display:flex;flex-direction:column;gap:5px}
-.fault{
-  display:flex;gap:8px;padding:7px 9px;border-left:2px solid var(--alert);
-  background:rgba(226,96,79,.08);font-size:12px;color:#f0b8b0;line-height:1.45;
-}
+.fault{display:flex;gap:8px;padding:7px 9px;border-left:2px solid var(--alert);background:rgba(226,96,79,.08);font-size:12px;color:#f0b8b0;line-height:1.45;text-align:left;width:100%}
 .fault.ok{border-left-color:var(--nominal);background:rgba(127,214,166,.07);color:#a9dec4}
+button.fault{cursor:pointer}
+button.fault:hover{background:rgba(226,96,79,.16)}
+.fault .jump{margin-left:auto;font-family:var(--f-mono);font-size:10px;color:var(--amber);white-space:nowrap;align-self:center}
 
 .rely{border:1px solid var(--rule);background:var(--plate);padding:10px 12px}
 .rely-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
@@ -309,81 +249,43 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .bar span{display:block;height:100%;background:linear-gradient(90deg,var(--alert),var(--amber),var(--nominal));transition:width .3s}
 .rely p{margin:7px 0 0;font-size:11.5px;color:var(--faint);line-height:1.5}
 
-/* ---------- launch overlay ---------- */
-.launch{
-  position:fixed;inset:0;z-index:50;display:none;
-  background:#050a0d;overflow:hidden;
-}
+/* ---------- launch ---------- */
+.launch{position:fixed;inset:0;z-index:50;display:none;background:#050a0d;overflow:hidden}
 .launch.on{display:block}
 #sky{position:absolute;inset:0;width:100%;height:100%;display:block}
-.stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
-.flier{
-  position:relative;transform-origin:center center;
-  transition:transform 2.6s cubic-bezier(.42,0,.62,1);
+.stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;perspective:1800px}
+.flier{position:relative;transform-style:preserve-3d;transition:transform 2.6s cubic-bezier(.42,0,.62,1)}
+.plume{
+  position:absolute;top:0;left:0;transform-origin:100% 50%;opacity:0;
+  background:linear-gradient(270deg,rgba(255,240,200,.95),rgba(240,165,60,.7) 36%,rgba(226,96,79,0) 100%);
+  clip-path:polygon(100% 0,100% 100%,0 66%,0 34%);
 }
-.flier .ship{position:relative;inset:auto;pointer-events:none}
-.flier .part{pointer-events:none;cursor:default}
-.flame{
-  position:absolute;top:12%;height:76%;right:100%;width:150%;
-  pointer-events:none;
-  background:linear-gradient(270deg,rgba(255,240,200,.95),rgba(240,165,60,.75) 34%,rgba(226,96,79,0) 100%);
-  clip-path:polygon(100% 0,100% 100%,0 62%,0 38%);
-  opacity:0;transform-origin:right center;
-}
-.flying .flame{opacity:1;animation:burn .11s steps(2,end) infinite alternate}
-@keyframes burn{from{transform:scaleX(.82) scaleY(.9)}to{transform:scaleX(1.12) scaleY(1.05)}}
+.flying .plume{opacity:1;animation:burn .11s steps(2,end) infinite alternate}
+@keyframes burn{from{transform:var(--pt) scaleX(.85)}to{transform:var(--pt) scaleX(1.15)}}
 
-.telem{
-  position:absolute;left:clamp(14px,4vw,54px);bottom:clamp(14px,5vh,46px);
-  width:min(430px,72vw);font-family:var(--f-mono);font-size:12px;line-height:1.75;
-  color:var(--data);text-shadow:0 0 12px rgba(111,182,207,.35);
-}
+.telem{position:absolute;left:clamp(14px,4vw,54px);bottom:clamp(14px,5vh,46px);width:min(430px,72vw);font-family:var(--f-mono);font-size:12px;line-height:1.75;color:var(--data);text-shadow:0 0 12px rgba(111,182,207,.35)}
 .telem div{opacity:0;animation:fadein .3s forwards}
 @keyframes fadein{to{opacity:1}}
 .telem .warnline{color:var(--alert)}
 .telem .okline{color:var(--nominal)}
 
-.verdict{
-  position:absolute;inset:0;display:none;align-items:center;justify-content:center;
-  background:rgba(5,10,13,.86);padding:20px;
-}
+.verdict{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(5,10,13,.86);padding:20px}
 .verdict.on{display:flex}
-.card{
-  width:min(500px,94vw);border:1px solid var(--rule);background:var(--deck);
-  padding:clamp(20px,3vw,32px);
-}
-.card .kicker{
-  font-family:var(--f-mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;
-  color:var(--faint);margin-bottom:8px;
-}
-.card h2{
-  margin:0 0 12px;font-family:var(--f-disp);font-size:clamp(28px,4.6vw,40px);font-weight:700;
-  letter-spacing:.05em;text-transform:uppercase;line-height:1;text-wrap:balance;
-}
+.card{width:min(500px,94vw);border:1px solid var(--rule);background:var(--deck);padding:clamp(20px,3vw,32px)}
+.card .kicker{font-family:var(--f-mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+.card h2{margin:0 0 12px;font-family:var(--f-disp);font-size:clamp(28px,4.6vw,40px);font-weight:700;letter-spacing:.05em;line-height:1;text-wrap:balance}
 .card.win h2{color:var(--nominal)}
 .card.lose h2{color:var(--alert)}
 .card p{margin:0 0 16px;font-size:14px;color:var(--dim);line-height:1.65}
 .ledger{display:flex;flex-direction:column;gap:1px;background:var(--rule-soft);margin-bottom:18px}
-.ledger div{
-  display:flex;justify-content:space-between;background:var(--plate);padding:8px 11px;
-  font-family:var(--f-mono);font-size:12px;font-variant-numeric:tabular-nums;color:var(--dim);
-}
+.ledger div{display:flex;justify-content:space-between;background:var(--plate);padding:8px 11px;font-family:var(--f-mono);font-size:12px;font-variant-numeric:tabular-nums;color:var(--dim)}
 .ledger div b{color:var(--ink)}
 .ledger div.gain b{color:var(--nominal)}
 .ledger div.loss b{color:var(--alert)}
-.unlocked{
-  border:1px dashed rgba(240,165,60,.42);padding:10px 12px;margin-bottom:18px;
-  font-size:12.5px;color:var(--amber);line-height:1.6;
-}
-.unlocked b{display:block;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.18em;
-  text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.unlocked{border:1px dashed rgba(240,165,60,.42);padding:10px 12px;margin-bottom:18px;font-size:12.5px;color:var(--amber);line-height:1.6}
+.unlocked b{display:block;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
 
-.toast{
-  position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(14px);
-  background:var(--plate);border:1px solid var(--amber);color:var(--ink);
-  padding:9px 16px;font-family:var(--f-mono);font-size:12px;
-  opacity:0;pointer-events:none;transition:.25s;z-index:60;
-}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(14px);background:var(--plate);border:1px solid var(--amber);color:var(--ink);padding:9px 16px;font-family:var(--f-mono);font-size:12px;opacity:0;pointer-events:none;transition:.25s;z-index:60}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
 @media (max-width:1080px){
@@ -399,21 +301,18 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   .mark{flex-direction:column;gap:1px;align-items:flex-start}
   .mark b{font-size:19px;letter-spacing:.08em}
   .masthead{gap:12px}
-  .purse{gap:14px}
+  .tab b{font-size:11.5px}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.001s!important;transition-duration:.001s!important}
-  .flying .flame{opacity:1;animation:none}
+  .flying .plume{opacity:1;animation:none}
 }
 </style>
 </head>
 <body>
 
 <header class="masthead">
-  <div class="mark">
-    <b>カークウッド造船ドック</b>
-    <span>Slip 04 · 軌道整備区</span>
-  </div>
+  <div class="mark"><b>カークウッド造船ドック</b><span>Slip 04 · 軌道整備区</span></div>
   <div class="mast-spacer"></div>
   <div class="purse">
     <div class="meter small"><i>建造費</i><b id="mBuild">0</b></div>
@@ -424,43 +323,44 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 
 <main class="console">
 
-  <!-- PARTS BIN -->
   <section class="pane bin">
     <div class="pane-head"><h2>パーツ倉庫</h2><span class="tag" id="binCount"></span></div>
     <div id="binBody"></div>
   </section>
 
-  <!-- DRYDOCK -->
   <section class="pane bay-wrap">
-    <div class="pane-head"><h2>ドック</h2><span class="tag">10 × 7 ハードポイント</span></div>
+    <div class="pane-head"><h2>ドック</h2><span class="tag" id="bayDim"></span></div>
 
     <div class="bay-tools">
       <input class="shipname" id="shipName" value="ホタル改" maxlength="18" aria-label="船名">
+      <button class="btn" id="bMirror" type="button" title="左右対称に同時設置">左右対称</button>
       <button class="btn" id="bUndo" type="button">元に戻す</button>
       <button class="btn" id="bClear" type="button">全解体</button>
     </div>
 
-    <div class="bay-frame">
-      <div class="bay-axis">
-        <span>← 排気方向</span>
-        <span class="bow">船首 →</span>
-      </div>
-      <div class="grid" id="grid">
-        <div class="ship" id="ship"></div>
-      </div>
+    <div class="tabs" id="tabs"></div>
+
+    <div class="depth" id="depthBar">
+      <span class="lab" id="depthLab"></span>
+      <button class="step" id="dPrev" type="button" aria-label="断面を戻す">‹</button>
+      <span class="val" id="depthVal"></span>
+      <button class="step" id="dNext" type="button" aria-label="断面を進める">›</button>
+      <input type="range" id="depthRange" min="0" max="4" value="2" aria-label="断面レイヤー">
+      <span class="note" id="depthNote"></span>
     </div>
 
-    <p class="hint">
-      <span><b>倉庫でパーツを選ぶ</b> → 空きマスをクリックで設置</span>
-      <span><b>設置済みをクリック</b>で撤去</span>
-      <span><b>Esc</b>で選択解除</span>
-    </p>
+    <div class="bay-frame" id="bayFrame">
+      <div class="bay-axis"><span id="axL"></span><span class="bow" id="axR"></span></div>
+      <div class="grid" id="grid"><div class="ship" id="ship"></div></div>
+      <div class="iso-wrap" id="isoWrap" hidden><div class="iso-scene" id="isoScene"></div></div>
+    </div>
+
+    <div class="legend" id="legend"></div>
+    <p class="hint" id="hint"></p>
   </section>
 
-  <!-- FLIGHT CHECK -->
   <section class="pane check">
     <div class="pane-head"><h2>飛行前点検</h2></div>
-
     <div class="readout" id="readout"></div>
 
     <div class="contract">
@@ -502,9 +402,9 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 "use strict";
 
 /* ============================================================
-   パーツ定義 — 船首は右(+x)、排気は左(-x)
+   ドックの体積 — X:船首尾(+Xが船首) / Y:上下 / Z:左右
    ============================================================ */
-var COLS = 10, ROWS = 7;
+var XMAX = 9, YMAX = 5, ZMAX = 5;
 
 var CATS = [
   {id:"command",  label:"司令部"},
@@ -514,50 +414,47 @@ var CATS = [
   {id:"utility",  label:"艤装"}
 ];
 
+/* w = X長, h = Y高, d = Z幅 */
 var PARTS = [
-  {id:"cockpit", cat:"command", name:"Mk1 コックピット", w:2,h:1, mass:3,  cost:40,  crew:1, power:-2, hull:12, blurb:"乗員1・与圧"},
-  {id:"bridge",  cat:"command", name:"司令ブリッジ",     w:2,h:2, mass:8,  cost:220, crew:4, power:-6, hull:30, blurb:"乗員4・与圧", lock:2},
+  {id:"cockpit", cat:"command", name:"Mk1 コックピット", w:2,h:1,d:1, mass:3,  cost:40,  crew:1, power:-2, hull:12, blurb:"乗員1・与圧"},
+  {id:"bridge",  cat:"command", name:"司令ブリッジ",     w:2,h:2,d:2, mass:8,  cost:220, crew:4, power:-6, hull:30, blurb:"乗員4・与圧", lock:2},
 
-  {id:"truss",   cat:"structure",name:"フレーム桁",      w:1,h:1, mass:1,  cost:8,   hull:4,  blurb:"軽量つなぎ材"},
-  {id:"spine",   cat:"structure",name:"船体スパイン",    w:2,h:1, mass:3,  cost:20,  hull:14, blurb:"主構体"},
-  {id:"plate",   cat:"structure",name:"装甲プレート",    w:1,h:1, mass:4,  cost:25,  hull:22, blurb:"耐圧+22"},
-  {id:"shield",  cat:"structure",name:"アブレーター盾",  w:1,h:2, mass:6,  cost:110, hull:45, blurb:"耐圧+45", lock:1},
+  {id:"truss",   cat:"structure",name:"フレーム桁",      w:1,h:1,d:1, mass:1,  cost:8,   hull:4,  blurb:"軽量つなぎ材"},
+  {id:"spine",   cat:"structure",name:"船体スパイン",    w:2,h:1,d:1, mass:3,  cost:20,  hull:14, blurb:"主構体"},
+  {id:"plate",   cat:"structure",name:"装甲プレート",    w:1,h:1,d:1, mass:4,  cost:25,  hull:22, blurb:"耐圧+22"},
+  {id:"shield",  cat:"structure",name:"アブレーター盾",  w:1,h:2,d:1, mass:6,  cost:110, hull:45, blurb:"耐圧+45", lock:1},
 
-  {id:"ion",     cat:"prop",   name:"イオンスラスタ",    w:1,h:1, mass:2,  cost:45,  thrust:45,  power:-8,  heat:6,  isp:3.2, blurb:"推力45・高比推力"},
-  {id:"chem",    cat:"prop",   name:"化学ブースター",    w:2,h:1, mass:6,  cost:70,  thrust:300, power:-2,  heat:16, isp:1.0, blurb:"推力300"},
-  {id:"fusion",  cat:"prop",   name:"核融合トーチ",      w:2,h:2, mass:14, cost:380, thrust:1400,power:-24, heat:55, isp:2.2, blurb:"推力1400", lock:3},
+  {id:"ion",     cat:"prop",   name:"イオンスラスタ",    w:1,h:1,d:1, mass:2,  cost:45,  thrust:45,  power:-8,  heat:6,  isp:3.2, blurb:"推力45・高比推力"},
+  {id:"chem",    cat:"prop",   name:"化学ブースター",    w:2,h:1,d:1, mass:6,  cost:70,  thrust:300, power:-2,  heat:16, isp:1.0, blurb:"推力300"},
+  {id:"fusion",  cat:"prop",   name:"核融合トーチ",      w:2,h:2,d:2, mass:14, cost:380, thrust:1400,power:-24, heat:55, isp:2.2, blurb:"推力1400", lock:3},
 
-  {id:"solar",   cat:"power",  name:"ソーラーウィング",  w:1,h:2, mass:2,  cost:35,  power:10, hull:3, blurb:"発電+10"},
-  {id:"rtg",     cat:"power",  name:"RTG セル",          w:1,h:1, mass:5,  cost:90,  power:7,  heat:4, blurb:"発電+7・常時", lock:1},
-  {id:"reactor", cat:"power",  name:"核分裂炉",          w:1,h:2, mass:12, cost:240, power:55, heat:30, blurb:"発電+55", lock:3},
+  {id:"solar",   cat:"power",  name:"ソーラーウィング",  w:1,h:2,d:1, mass:2,  cost:35,  power:10, hull:3, blurb:"発電+10"},
+  {id:"rtg",     cat:"power",  name:"RTG セル",          w:1,h:1,d:1, mass:5,  cost:90,  power:7,  heat:4, blurb:"発電+7・常時", lock:1},
+  {id:"reactor", cat:"power",  name:"核分裂炉",          w:1,h:2,d:1, mass:12, cost:240, power:55, heat:30, blurb:"発電+55", lock:3},
 
-  {id:"tank",    cat:"utility",name:"燃料タンク",        w:1,h:2, mass:2,  cost:30,  fuel:40,  hull:6,  blurb:"燃料40"},
-  {id:"tankL",   cat:"utility",name:"長距離タンク",      w:2,h:2, mass:5,  cost:95,  fuel:130, hull:12, blurb:"燃料130", lock:1},
-  {id:"cargo",   cat:"utility",name:"貨物ベイ",          w:2,h:2, mass:4,  cost:80,  cargo:30, hull:10, blurb:"積載30"},
-  {id:"sensor",  cat:"utility",name:"センサーマスト",    w:1,h:1, mass:1,  cost:40,  sensors:1, power:-3, blurb:"観測機器×1"},
-  {id:"rad",     cat:"utility",name:"放熱フィン",        w:1,h:2, mass:2,  cost:45,  cooling:35, power:-2, blurb:"冷却35"}
+  {id:"tank",    cat:"utility",name:"燃料タンク",        w:1,h:2,d:1, mass:2,  cost:30,  fuel:40,  hull:6,  blurb:"燃料40"},
+  {id:"tankL",   cat:"utility",name:"長距離タンク",      w:2,h:2,d:2, mass:5,  cost:95,  fuel:130, hull:12, blurb:"燃料130", lock:1},
+  {id:"cargo",   cat:"utility",name:"貨物ベイ",          w:2,h:2,d:2, mass:4,  cost:80,  cargo:30, hull:10, blurb:"積載30"},
+  {id:"sensor",  cat:"utility",name:"センサーマスト",    w:1,h:1,d:1, mass:1,  cost:40,  sensors:1, power:-3, blurb:"観測機器×1"},
+  {id:"rad",     cat:"utility",name:"放熱フィン",        w:1,h:2,d:1, mass:2,  cost:45,  cooling:35, power:-2, blurb:"冷却35"}
 ];
-
 var PMAP = {};
 PARTS.forEach(function(p){ PMAP[p.id] = p; });
 
-/* ---------- パーツの絵 (viewBox = w*100 × h*100) ---------- */
+/* ---------- 側面図用の詳細プロファイル ---------- */
 var ART = {
   cockpit:'<path class="p-hull" d="M6 74 L6 26 L112 12 L186 42 L192 50 L186 58 L112 88 Z"/>'+
           '<path class="p-glass" d="M116 32 L172 48 L116 68 Z"/>'+
-          '<path class="p-line" d="M40 22 L40 78 M72 18 L72 82"/>'+
-          '<circle class="p-glow" cx="24" cy="50" r="5"/>',
+          '<path class="p-line" d="M40 22 L40 78 M72 18 L72 82"/><circle class="p-glow" cx="24" cy="50" r="5"/>',
   bridge: '<path class="p-hull" d="M8 178 L8 22 L120 8 L188 76 L192 100 L188 124 L120 192 Z"/>'+
           '<path class="p-glass" d="M120 40 L176 96 L176 104 L120 160 Z"/>'+
           '<path class="p-line" d="M46 20 L46 180 M84 14 L84 186"/>'+
-          '<circle class="p-glow" cx="26" cy="100" r="7"/>'+
-          '<rect class="p-deep" x="16" y="86" width="20" height="28"/>',
+          '<circle class="p-glow" cx="26" cy="100" r="7"/><rect class="p-deep" x="16" y="86" width="20" height="28"/>',
   truss:  '<rect class="p-deep" x="10" y="10" width="80" height="80"/>'+
           '<path class="p-edge" d="M12 12 L88 12 L88 88 L12 88 Z M12 12 L88 88 M88 12 L12 88"/>',
   spine:  '<rect class="p-hull" x="4" y="26" width="192" height="48"/>'+
           '<path class="p-line" d="M4 38 L196 38 M4 62 L196 62"/>'+
-          '<rect class="p-deep" x="52" y="42" width="16" height="16"/>'+
-          '<rect class="p-deep" x="132" y="42" width="16" height="16"/>',
+          '<rect class="p-deep" x="52" y="42" width="16" height="16"/><rect class="p-deep" x="132" y="42" width="16" height="16"/>',
   plate:  '<path class="p-hull" d="M6 18 L18 6 L82 6 L94 18 L94 82 L82 94 L18 94 L6 82 Z"/>'+
           '<path class="p-line" d="M22 26 L78 26 M22 50 L78 50 M22 74 L78 74"/>',
   shield: '<path class="p-hull" d="M20 8 L58 8 Q94 100 58 192 L20 192 Z"/>'+
@@ -565,16 +462,14 @@ var ART = {
           '<path class="p-line" d="M34 22 Q64 100 34 178 M46 26 Q74 100 46 174"/>',
   ion:    '<rect class="p-hull" x="34" y="24" width="56" height="52"/>'+
           '<path class="p-deep" d="M34 32 L8 14 L8 86 L34 68 Z"/>'+
-          '<circle class="p-glass" cx="24" cy="50" r="9"/>'+
-          '<path class="p-line" d="M46 30 L46 70"/>',
+          '<circle class="p-glass" cx="24" cy="50" r="9"/><path class="p-line" d="M46 30 L46 70"/>',
   chem:   '<rect class="p-hull" x="52" y="16" width="144" height="68"/>'+
           '<path class="p-deep" d="M52 24 L8 4 L8 96 L52 76 Z"/>'+
           '<ellipse class="p-glow" cx="18" cy="50" rx="7" ry="26"/>'+
           '<path class="p-line" d="M78 20 L78 80 M112 20 L112 80 M146 20 L146 80"/>',
   fusion: '<rect class="p-hull" x="66" y="18" width="128" height="164"/>'+
           '<path class="p-deep" d="M66 34 L10 6 L10 90 L66 66 Z M66 134 L10 110 L10 194 L66 166 Z"/>'+
-          '<ellipse class="p-glow" cx="22" cy="50" rx="8" ry="24"/>'+
-          '<ellipse class="p-glow" cx="22" cy="150" rx="8" ry="24"/>'+
+          '<ellipse class="p-glow" cx="22" cy="50" rx="8" ry="24"/><ellipse class="p-glow" cx="22" cy="150" rx="8" ry="24"/>'+
           '<path class="p-line" d="M92 26 L92 174 M130 26 L130 174 M166 26 L166 174"/>'+
           '<circle class="p-glass" cx="150" cy="100" r="16"/>',
   solar:  '<rect class="p-hull" x="72" y="70" width="22" height="60"/>'+
@@ -584,95 +479,132 @@ var ART = {
           '<path class="p-line" d="M10 24 L26 24 M10 40 L26 40 M10 56 L26 56 M10 72 L26 72 M74 24 L90 24 M74 40 L90 40 M74 56 L90 56 M74 72 L90 72"/>'+
           '<circle class="p-glow" cx="50" cy="50" r="11"/>',
   reactor:'<rect class="p-hull" x="14" y="14" width="72" height="172" rx="6"/>'+
-          '<rect class="p-glow" x="14" y="88" width="72" height="10"/>'+
-          '<rect class="p-glow" x="14" y="106" width="72" height="10"/>'+
-          '<circle class="p-glass" cx="50" cy="48" r="16"/>'+
-          '<path class="p-line" d="M22 140 L78 140 M22 160 L78 160"/>',
+          '<rect class="p-glow" x="14" y="88" width="72" height="10"/><rect class="p-glow" x="14" y="106" width="72" height="10"/>'+
+          '<circle class="p-glass" cx="50" cy="48" r="16"/><path class="p-line" d="M22 140 L78 140 M22 160 L78 160"/>',
   tank:   '<rect class="p-hull" x="12" y="10" width="76" height="180" rx="34"/>'+
-          '<path class="p-line" d="M12 62 L88 62 M12 138 L88 138"/>'+
-          '<rect class="p-deep" x="34" y="90" width="32" height="20"/>',
+          '<path class="p-line" d="M12 62 L88 62 M12 138 L88 138"/><rect class="p-deep" x="34" y="90" width="32" height="20"/>',
   tankL:  '<rect class="p-hull" x="14" y="12" width="172" height="176" rx="46"/>'+
-          '<path class="p-line" d="M14 64 L186 64 M14 136 L186 136 M100 12 L100 188"/>'+
-          '<rect class="p-deep" x="76" y="86" width="48" height="28"/>',
-  cargo:  '<rect class="p-hull" x="8" y="14" width="184" height="172"/>'+
-          '<rect class="p-deep" x="30" y="36" width="140" height="128"/>'+
-          '<path class="p-line" d="M100 36 L100 164 M30 100 L170 100"/>'+
-          '<rect class="p-glow" x="88" y="90" width="24" height="20"/>',
+          '<path class="p-line" d="M14 64 L186 64 M14 136 L186 136 M100 12 L100 188"/><rect class="p-deep" x="76" y="86" width="48" height="28"/>',
+  cargo:  '<rect class="p-hull" x="8" y="14" width="184" height="172"/><rect class="p-deep" x="30" y="36" width="140" height="128"/>'+
+          '<path class="p-line" d="M100 36 L100 164 M30 100 L170 100"/><rect class="p-glow" x="88" y="90" width="24" height="20"/>',
   sensor: '<rect class="p-hull" x="40" y="52" width="20" height="42"/>'+
-          '<path class="p-glass" d="M50 10 Q92 34 50 58 Q8 34 50 10 Z"/>'+
-          '<circle class="p-glow" cx="50" cy="34" r="5"/>',
+          '<path class="p-glass" d="M50 10 Q92 34 50 58 Q8 34 50 10 Z"/><circle class="p-glow" cx="50" cy="34" r="5"/>',
   rad:    '<rect class="p-hull" x="40" y="16" width="20" height="168"/>'+
           '<path class="p-line" d="M8 34 L92 34 M8 62 L92 62 M8 90 L92 90 M8 118 L92 118 M8 146 L92 146 M8 174 L92 174"/>'+
           '<rect class="p-mint" x="44" y="80" width="12" height="40" opacity=".7"/>'
 };
 
-function svgFor(id){
-  var p = PMAP[id];
-  return '<svg viewBox="0 0 '+(p.w*100)+' '+(p.h*100)+'" aria-hidden="true">'+ART[id]+'</svg>';
+function profileSVG(id, sw, sh){
+  return '<svg viewBox="0 0 '+(sw*100)+' '+(sh*100)+'" preserveAspectRatio="none" aria-hidden="true">'+ART[id]+'</svg>';
+}
+
+/* 平面図・正面図は系統色のスケマティックブロック */
+function blockSVG(id, sw, sh, view){
+  var p = PMAP[id], W = sw*100, H = sh*100, m = 7;
+  var s = '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="--sys:var(--sys-'+p.cat+')" aria-hidden="true">';
+  var poly = 'M'+(m+9)+' '+m+' L'+(W-m)+' '+m+' L'+(W-m)+' '+(H-m-9)+' L'+(W-m-9)+' '+(H-m)+' L'+m+' '+(H-m)+' L'+m+' '+(m+9)+' Z';
+  s += '<path class="b-face" d="'+poly+'"/><path class="b-edge" d="'+poly+'"/>';
+  var cx = W/2, cy = H/2, r = Math.min(W,H)*0.17;
+  if(p.thrust){
+    if(view === "top"){
+      s += '<path class="b-glow" d="M'+m+' '+(cy-H*0.24)+' L'+(m+W*0.22)+' '+cy+' L'+m+' '+(cy+H*0.24)+' Z"/>';
+    }else{
+      s += '<circle class="b-glow" cx="'+cx+'" cy="'+cy+'" r="'+r+'"/>';
+      s += '<circle class="b-edge" cx="'+cx+'" cy="'+cy+'" r="'+(r*1.9)+'"/>';
+    }
+  }else if(p.power > 0){
+    s += '<rect class="b-mark" x="'+(cx-W*0.26)+'" y="'+(cy-H*0.055)+'" width="'+(W*0.52)+'" height="'+(H*0.11)+'"/>';
+  }else if(p.fuel){
+    s += '<rect class="b-mark" x="'+(cx-W*0.2)+'" y="'+(cy-H*0.2)+'" width="'+(W*0.4)+'" height="'+(H*0.4)+'" rx="'+(Math.min(W,H)*0.14)+'"/>';
+  }else if(p.cargo){
+    s += '<rect class="b-edge" x="'+(m+W*0.16)+'" y="'+(m+H*0.16)+'" width="'+(W-2*m-W*0.32)+'" height="'+(H-2*m-H*0.32)+'"/>';
+  }else if(p.cooling){
+    s += '<path class="b-edge" d="M'+(m+6)+' '+(cy-H*0.18)+' L'+(W-m-6)+' '+(cy-H*0.18)+' M'+(m+6)+' '+cy+' L'+(W-m-6)+' '+cy+' M'+(m+6)+' '+(cy+H*0.18)+' L'+(W-m-6)+' '+(cy+H*0.18)+'"/>';
+  }else if(p.crew){
+    s += '<circle class="b-mark" cx="'+cx+'" cy="'+cy+'" r="'+r+'"/>';
+  }else if(p.sensors){
+    s += '<circle class="b-glow" cx="'+cx+'" cy="'+cy+'" r="'+(r*0.7)+'"/>';
+  }else{
+    s += '<path class="b-edge" d="M'+(m+8)+' '+(H-m-8)+' L'+(W-m-8)+' '+(m+8)+'"/>';
+  }
+  return s + '</svg>';
+}
+
+/* ============================================================
+   ビュー
+   ============================================================ */
+var VIEWS = {
+  side:  {label:"側面図", sub:"X × Y", cols:XMAX, rows:YMAX, depthAxis:"z", depthMax:ZMAX,
+          axL:"← 排気方向", axR:"船首 →", note:"断面は左舷→右舷"},
+  top:   {label:"平面図", sub:"X × Z", cols:XMAX, rows:ZMAX, depthAxis:"y", depthMax:YMAX,
+          axL:"← 排気方向", axR:"船首 →", note:"断面は上→下"},
+  front: {label:"正面図", sub:"Z × Y", cols:ZMAX, rows:YMAX, depthAxis:"x", depthMax:XMAX,
+          axL:"左舷", axR:"右舷", note:"断面は船尾→船首"},
+  iso:   {label:"立体", sub:"確認用"}
+};
+var VIEW_ORDER = ["side","top","front","iso"];
+
+function toScreen(view, inst){
+  var p = PMAP[inst.id];
+  if(view === "side")  return {sx:inst.x, sy:inst.y, sw:p.w, sh:p.h, d0:inst.z, dl:p.d};
+  if(view === "top")   return {sx:inst.x, sy:inst.z, sw:p.w, sh:p.d, d0:inst.y, dl:p.h};
+  return {sx:ZMAX - inst.z - p.d, sy:inst.y, sw:p.d, sh:p.h, d0:inst.x, dl:p.w};
+}
+function toWorld(view, sx, sy, depth, p){
+  if(view === "side")  return {x:sx, y:sy, z:depth};
+  if(view === "top")   return {x:sx, y:depth, z:sy};
+  return {x:depth, y:sy, z:ZMAX - sx - p.d};
+}
+function depthLen(view, p){
+  if(view === "side") return p.d;
+  if(view === "top")  return p.h;
+  return p.w;
 }
 
 /* ============================================================
    契約
    ============================================================ */
 var CONTRACTS = [
-  {
-    id:0, name:"射場試験・第一号",
-    brief:"ドックの上を垂直に飛び、無事に帰ってくること。それだけで信用がつきます。",
-    pay:500,
-    reqs:[{k:"twr",label:"推力比",min:1.1},{k:"crew",label:"乗員",min:1},{k:"dv",label:"Δv",min:18}],
-    unlocks:["rtg","tankL","shield"]
-  },
-  {
-    id:1, name:"月周回サーベイ",
-    brief:"月の裏側を一周し、地形レーダーを引きながら戻る。持続力と観測装備が要ります。",
-    pay:900,
-    reqs:[{k:"twr",label:"推力比",min:1.0},{k:"dv",label:"Δv",min:70},{k:"sensors",label:"観測機器",min:1}],
-    unlocks:["bridge"]
-  },
-  {
-    id:2, name:"小惑星帯・鉱石便",
-    brief:"帯の内縁で積み込み、砕けた岩の中を抜けて帰投。船体の厚みが命綱です。",
-    pay:1500,
-    reqs:[{k:"cargo",label:"積載",min:30},{k:"dv",label:"Δv",min:90},{k:"hull",label:"船体強度",min:80},{k:"twr",label:"推力比",min:0.9}],
-    unlocks:["reactor","fusion"]
-  },
-  {
-    id:3, name:"L4 中継機の設置",
-    brief:"ラグランジュ点に大出力の中継機を据える。発電と放熱の設計勝負になります。",
-    pay:2200,
-    reqs:[{k:"power",label:"余剰電力",min:15},{k:"sensors",label:"観測機器",min:2},{k:"dv",label:"Δv",min:120}],
-    unlocks:[]
-  },
-  {
-    id:4, name:"外縁航路の開設",
-    brief:"有人で外縁まで。片道の余裕がなければ、誰も帰ってきません。",
-    pay:3500,
-    reqs:[{k:"crew",label:"乗員",min:4},{k:"dv",label:"Δv",min:180},{k:"cargo",label:"積載",min:30},
-          {k:"hull",label:"船体強度",min:150},{k:"twr",label:"推力比",min:1.1}],
-    unlocks:[]
-  }
+  {id:0, name:"射場試験・第一号",
+   brief:"ドックの上を垂直に飛び、無事に帰ってくること。それだけで信用がつきます。",
+   pay:500, reqs:[{k:"twr",label:"推力比",min:1.1},{k:"crew",label:"乗員",min:1},{k:"dv",label:"Δv",min:18}],
+   unlocks:["rtg","tankL","shield"]},
+  {id:1, name:"月周回サーベイ",
+   brief:"月の裏側を一周し、地形レーダーを引きながら戻る。持続力と観測装備が要ります。",
+   pay:900, reqs:[{k:"twr",label:"推力比",min:1.0},{k:"dv",label:"Δv",min:70},{k:"sensors",label:"観測機器",min:1}],
+   unlocks:["bridge"]},
+  {id:2, name:"小惑星帯・鉱石便",
+   brief:"帯の内縁で積み込み、砕けた岩の中を抜けて帰投。船体の厚みが命綱です。",
+   pay:1500, reqs:[{k:"cargo",label:"積載",min:30},{k:"dv",label:"Δv",min:90},{k:"hull",label:"船体強度",min:80},{k:"twr",label:"推力比",min:0.9}],
+   unlocks:["reactor","fusion"]},
+  {id:3, name:"L4 中継機の設置",
+   brief:"ラグランジュ点に大出力の中継機を据える。発電と放熱の設計勝負になります。",
+   pay:2200, reqs:[{k:"power",label:"余剰電力",min:15},{k:"sensors",label:"観測機器",min:2},{k:"dv",label:"Δv",min:120}],
+   unlocks:[]},
+  {id:4, name:"外縁航路の開設",
+   brief:"有人で外縁まで。片道の余裕がなければ、誰も帰ってきません。",
+   pay:3500, reqs:[{k:"crew",label:"乗員",min:4},{k:"dv",label:"Δv",min:180},{k:"cargo",label:"積載",min:30},
+                   {k:"hull",label:"船体強度",min:150},{k:"twr",label:"推力比",min:1.1}],
+   unlocks:[]}
 ];
 
 /* ============================================================
    状態
    ============================================================ */
-var SAVE_KEY = "kirkwood-drydock-v1";
+var SAVE_KEY = "kirkwood-drydock-v2";
 var state = {
-  cells:{},        // "x,y" -> uid
-  parts:{},        // uid -> {uid,id,x,y}
-  seq:1,
-  credits:250,
-  done:{},         // contract id -> true
-  contract:0,
-  name:"ホタル改",
-  history:[]
+  cells:{}, parts:{}, seq:1,
+  credits:250, done:{}, contract:0, name:"ホタル改",
+  history:[], view:"side",
+  depth:{side:Math.floor(ZMAX/2), top:Math.floor(YMAX/2), front:0},
+  mirror:false
 };
 
 function save(){
   try{
     localStorage.setItem(SAVE_KEY, JSON.stringify({
-      parts:state.parts, seq:state.seq, credits:state.credits,
-      done:state.done, contract:state.contract, name:state.name
+      parts:state.parts, seq:state.seq, credits:state.credits, done:state.done,
+      contract:state.contract, name:state.name, view:state.view, depth:state.depth, mirror:state.mirror
     }));
   }catch(e){}
 }
@@ -687,21 +619,23 @@ function load(){
     state.contract = typeof d.contract === "number" ? d.contract : 0;
     state.name = d.name || state.name;
     state.seq = d.seq || 1;
-    state.parts = {};
-    state.cells = {};
+    state.mirror = !!d.mirror;
+    if(d.view && VIEWS[d.view]) state.view = d.view;
+    if(d.depth) ["side","top","front"].forEach(function(v){
+      if(typeof d.depth[v] === "number") state.depth[v] = d.depth[v];
+    });
+    state.parts = {}; state.cells = {};
     var ps = d.parts || {};
     Object.keys(ps).forEach(function(uid){
       var p = ps[uid];
-      if(p && PMAP[p.id] && fits(p.id, p.x, p.y, null)) place(p.id, p.x, p.y, uid, true);
+      if(p && PMAP[p.id] && fits(p.id, p.x, p.y, p.z, null)) place(p.id, p.x, p.y, p.z, uid, true);
     });
   }catch(e){}
 }
 
 function unlockedIds(){
   var set = {};
-  PARTS.forEach(function(p){
-    if(!p.lock) set[p.id] = true;
-  });
+  PARTS.forEach(function(p){ if(!p.lock) set[p.id] = true; });
   CONTRACTS.forEach(function(c){
     if(state.done[c.id]) c.unlocks.forEach(function(id){ set[id] = true; });
   });
@@ -715,30 +649,31 @@ function unlockContractOf(partId){
 }
 
 /* ============================================================
-   配置ロジック
+   配置
    ============================================================ */
-function key(x,y){ return x+","+y; }
+function key(x,y,z){ return x+","+y+","+z; }
 
-function fits(partId, x, y, ignoreUid){
+function fits(partId, x, y, z, ignoreUid){
   var p = PMAP[partId];
-  if(x < 0 || y < 0 || x + p.w > COLS || y + p.h > ROWS) return false;
-  for(var dx=0; dx<p.w; dx++){
-    for(var dy=0; dy<p.h; dy++){
-      var occ = state.cells[key(x+dx, y+dy)];
-      if(occ && occ !== ignoreUid) return false;
-    }
-  }
+  if(x < 0 || y < 0 || z < 0 || x+p.w > XMAX || y+p.h > YMAX || z+p.d > ZMAX) return false;
+  for(var dx=0; dx<p.w; dx++)
+    for(var dy=0; dy<p.h; dy++)
+      for(var dz=0; dz<p.d; dz++){
+        var occ = state.cells[key(x+dx, y+dy, z+dz)];
+        if(occ && occ !== ignoreUid) return false;
+      }
   return true;
 }
 
-function place(partId, x, y, forcedUid, silent){
+function place(partId, x, y, z, forcedUid, silent){
   var p = PMAP[partId];
   var uid = forcedUid || ("u" + (state.seq++));
-  state.parts[uid] = {uid:uid, id:partId, x:x, y:y};
+  state.parts[uid] = {uid:uid, id:partId, x:x, y:y, z:z};
   for(var dx=0; dx<p.w; dx++)
     for(var dy=0; dy<p.h; dy++)
-      state.cells[key(x+dx, y+dy)] = uid;
-  if(!silent) state.history.push({t:"add", uid:uid});
+      for(var dz=0; dz<p.d; dz++)
+        state.cells[key(x+dx, y+dy, z+dz)] = uid;
+  if(!silent) state.history.push({t:"add", uids:[uid]});
   return uid;
 }
 
@@ -748,147 +683,144 @@ function remove(uid, silent){
   var p = PMAP[inst.id];
   for(var dx=0; dx<p.w; dx++)
     for(var dy=0; dy<p.h; dy++)
-      delete state.cells[key(inst.x+dx, inst.y+dy)];
+      for(var dz=0; dz<p.d; dz++)
+        delete state.cells[key(inst.x+dx, inst.y+dy, inst.z+dz)];
   delete state.parts[uid];
-  if(!silent) state.history.push({t:"del", inst:inst});
+  if(!silent) state.history.push({t:"del", insts:[inst]});
+}
+
+function mirrorZ(partId, z){ return ZMAX - z - PMAP[partId].d; }
+
+function placeMaybeMirrored(partId, x, y, z){
+  if(!fits(partId, x, y, z, null)) return false;
+  var uids = [place(partId, x, y, z, null, true)];
+  if(state.mirror){
+    var mz = mirrorZ(partId, z);
+    if(mz !== z && fits(partId, x, y, mz, null)) uids.push(place(partId, x, y, mz, null, true));
+  }
+  state.history.push({t:"add", uids:uids});
+  return true;
+}
+
+function removeGroup(uid){
+  var inst = state.parts[uid];
+  if(!inst) return;
+  var insts = [inst];
+  if(state.mirror){
+    var mz = mirrorZ(inst.id, inst.z);
+    if(mz !== inst.z){
+      var twinId = state.cells[key(inst.x, inst.y, mz)];
+      var t = twinId && state.parts[twinId];
+      if(t && t.id === inst.id && t.x === inst.x && t.y === inst.y && t.z === mz) insts.push(t);
+    }
+  }
+  insts.forEach(function(i){ remove(i.uid, true); });
+  state.history.push({t:"del", insts:insts});
 }
 
 function undo(){
   var h = state.history.pop();
   if(!h){ toast("これ以上戻せません"); return; }
-  if(h.t === "add") remove(h.uid, true);
-  else place(h.inst.id, h.inst.x, h.inst.y, h.inst.uid, true);
+  if(h.t === "add") h.uids.forEach(function(u){ remove(u, true); });
+  else h.insts.forEach(function(i){ place(i.id, i.x, i.y, i.z, i.uid, true); });
   refresh();
 }
 
 /* ============================================================
-   船の解析
+   解析
    ============================================================ */
 function analyze(){
   var list = Object.keys(state.parts).map(function(u){ return state.parts[u]; });
-  var s = {
-    count:list.length, dryMass:0, thrust:0, fuel:0, power:0, heat:0, cooling:20,
-    hull:0, crew:0, cargo:0, sensors:0, cost:0, ispNum:0, engines:[],
-    faults:[], loose:[], blocked:[]
-  };
+  var s = {count:list.length, dryMass:0, thrust:0, fuel:0, power:0, heat:0, cooling:20,
+           hull:0, crew:0, cargo:0, sensors:0, cost:0, ispNum:0,
+           engines:[], faults:[], loose:[], blocked:[]};
 
   list.forEach(function(inst){
     var p = PMAP[inst.id];
-    s.dryMass += p.mass;
-    s.cost    += p.cost;
-    s.thrust  += p.thrust  || 0;
-    s.fuel    += p.fuel    || 0;
-    s.power   += p.power   || 0;
-    s.heat    += p.heat    || 0;
-    s.cooling += p.cooling || 0;
-    s.hull    += p.hull    || 0;
-    s.crew    += p.crew    || 0;
-    s.cargo   += p.cargo   || 0;
-    s.sensors += p.sensors || 0;
-    if(p.thrust){
-      s.ispNum += p.thrust * p.isp;
-      s.engines.push(inst);
-    }
+    s.dryMass += p.mass; s.cost += p.cost;
+    s.thrust += p.thrust||0; s.fuel += p.fuel||0; s.power += p.power||0;
+    s.heat += p.heat||0; s.cooling += p.cooling||0; s.hull += p.hull||0;
+    s.crew += p.crew||0; s.cargo += p.cargo||0; s.sensors += p.sensors||0;
+    if(p.thrust){ s.ispNum += p.thrust * p.isp; s.engines.push(inst); }
   });
 
-  s.fuelMass  = s.fuel * 0.06;
-  s.wetMass   = s.dryMass + s.fuelMass;
-  s.isp       = s.thrust > 0 ? s.ispNum / s.thrust : 0;
-  s.twr       = s.wetMass > 0 ? s.thrust / (s.wetMass * 9.81) : 0;
-  s.dv        = (s.dryMass > 0 && s.thrust > 0)
-                ? 220 * s.isp * Math.log(s.wetMass / s.dryMass) : 0;
+  s.fuelMass = s.fuel * 0.06;
+  s.wetMass  = s.dryMass + s.fuelMass;
+  s.isp      = s.thrust > 0 ? s.ispNum / s.thrust : 0;
+  s.twr      = s.wetMass > 0 ? s.thrust / (s.wetMass * 9.81) : 0;
+  s.dv       = (s.dryMass > 0 && s.thrust > 0) ? 220 * s.isp * Math.log(s.wetMass / s.dryMass) : 0;
   s.heatMargin = s.cooling - s.heat;
 
-  // 司令部から連結をたどる
   var cmd = null;
-  for(var i=0;i<list.length;i++){
-    if(PMAP[list[i].id].crew){ cmd = list[i]; break; }
-  }
+  for(var i=0;i<list.length;i++){ if(PMAP[list[i].id].crew){ cmd = list[i]; break; } }
   if(!cmd){
-    if(s.count) s.faults.push("司令部がありません。コックピットかブリッジを載せてください。");
+    if(s.count) s.faults.push({msg:"司令部がありません。コックピットかブリッジを載せてください。"});
   }else{
     var seen = {}, queue = [cmd.uid];
     seen[cmd.uid] = true;
+    var STEPS = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
     while(queue.length){
-      var uid = queue.shift();
-      var inst = state.parts[uid], p = PMAP[inst.id];
-      for(var dx=-1; dx<=p.w; dx++){
-        for(var dy=-1; dy<=p.h; dy++){
-          var edge = (dx===-1||dx===p.w) !== (dy===-1||dy===p.h);
-          if(!edge) continue;
-          var n = state.cells[key(inst.x+dx, inst.y+dy)];
-          if(n && !seen[n]){ seen[n] = true; queue.push(n); }
-        }
-      }
+      var inst = state.parts[queue.shift()], p = PMAP[inst.id];
+      for(var dx=0; dx<p.w; dx++)
+        for(var dy=0; dy<p.h; dy++)
+          for(var dz=0; dz<p.d; dz++)
+            for(var k=0;k<6;k++){
+              var n = state.cells[key(inst.x+dx+STEPS[k][0], inst.y+dy+STEPS[k][1], inst.z+dz+STEPS[k][2])];
+              if(n && !seen[n]){ seen[n] = true; queue.push(n); }
+            }
     }
     list.forEach(function(inst){ if(!seen[inst.uid]) s.loose.push(inst); });
     if(s.loose.length){
-      s.faults.push(s.loose.length + "個のパーツが本体から浮いています。隣接するように置き直してください。");
+      s.faults.push({msg:s.loose.length+"個のパーツが本体から浮いています。隣接するように置き直してください。", jump:s.loose[0]});
     }
   }
 
-  // 排気口の前方確認
   s.engines.forEach(function(inst){
-    var p = PMAP[inst.id];
-    for(var dy=0; dy<p.h; dy++){
-      if(state.cells[key(inst.x-1, inst.y+dy)]){
-        if(s.blocked.indexOf(inst) < 0) s.blocked.push(inst);
-      }
-    }
+    var p = PMAP[inst.id], hit = false;
+    for(var dy=0; dy<p.h; dy++)
+      for(var dz=0; dz<p.d; dz++)
+        if(state.cells[key(inst.x-1, inst.y+dy, inst.z+dz)]) hit = true;
+    if(hit) s.blocked.push(inst);
   });
   if(s.blocked.length){
-    s.faults.push(s.blocked.length + "基のエンジンが排気を塞がれています。エンジンの左側は空けてください。");
+    s.faults.push({msg:s.blocked.length+"基のエンジンが排気を塞がれています。エンジンの船尾側は空けてください。", jump:s.blocked[0]});
   }
 
-  if(s.count && !s.engines.length) s.faults.push("エンジンがありません。");
-  if(s.power < 0) s.faults.push("電力が " + Math.abs(s.power) + " kW 不足しています。");
-  if(s.heatMargin < 0) s.faults.push("排熱が " + Math.abs(s.heatMargin) + " 単位不足。放熱フィンを足してください。");
-  if(s.fuel === 0 && s.engines.length) s.faults.push("燃料タンクがありません。");
-  if(s.cost > state.credits) s.faults.push("資金不足です。あと " + (s.cost - state.credits) + " CR 必要。");
-
+  if(s.count && !s.engines.length) s.faults.push({msg:"エンジンがありません。"});
+  if(s.power < 0) s.faults.push({msg:"電力が "+Math.abs(s.power)+" kW 不足しています。"});
+  if(s.heatMargin < 0) s.faults.push({msg:"排熱が "+Math.abs(s.heatMargin)+" 単位不足。放熱フィンを足してください。"});
+  if(s.fuel === 0 && s.engines.length) s.faults.push({msg:"燃料タンクがありません。"});
+  if(s.cost > state.credits) s.faults.push({msg:"資金不足です。あと "+(s.cost - state.credits)+" CR 必要。"});
   return s;
 }
 
-function reqValue(s, k){
-  if(k === "twr") return s.twr;
-  if(k === "dv") return s.dv;
-  if(k === "power") return s.power;
-  if(k === "hull") return s.hull;
-  if(k === "crew") return s.crew;
-  if(k === "cargo") return s.cargo;
-  if(k === "sensors") return s.sensors;
-  return 0;
+function reqValue(s,k){
+  return k==="twr"?s.twr:k==="dv"?s.dv:k==="power"?s.power:k==="hull"?s.hull:
+         k==="crew"?s.crew:k==="cargo"?s.cargo:k==="sensors"?s.sensors:0;
 }
-function fmtReq(k, v){
-  if(k === "twr") return v.toFixed(2);
-  if(k === "dv") return Math.round(v);
-  return Math.round(v);
-}
+function fmtReq(k,v){ return k==="twr" ? v.toFixed(2) : Math.round(v); }
 
-function reliability(s, c){
+function reliability(s,c){
   if(!s.engines.length) return 0;
   var r = 52;
   c.reqs.forEach(function(rq){
-    var have = reqValue(s, rq.k);
-    var margin = rq.min > 0 ? (have - rq.min) / rq.min : 0;
-    r += Math.max(-20, Math.min(9, margin * 22));
+    var m = rq.min > 0 ? (reqValue(s,rq.k) - rq.min)/rq.min : 0;
+    r += Math.max(-20, Math.min(9, m*22));
   });
-  r += Math.min(10, s.heatMargin / 6);
-  r += Math.min(8, s.power / 5);
-  r += Math.min(8, s.hull / 30);
+  r += Math.min(10, s.heatMargin/6);
+  r += Math.min(8, s.power/5);
+  r += Math.min(8, s.hull/30);
   return Math.max(20, Math.min(97, Math.round(r)));
 }
-
-function weakest(s, c){
-  var worst = null, worstM = Infinity;
+function weakest(s,c){
+  var worst = null, wm = Infinity;
   c.reqs.forEach(function(rq){
-    var m = rq.min > 0 ? (reqValue(s, rq.k) - rq.min) / rq.min : 9;
-    if(m < worstM){ worstM = m; worst = rq.k; }
+    var m = rq.min > 0 ? (reqValue(s,rq.k)-rq.min)/rq.min : 9;
+    if(m < wm){ wm = m; worst = rq.k; }
   });
-  if(s.heatMargin / Math.max(1, s.heat) < worstM){ worstM = s.heatMargin / Math.max(1, s.heat); worst = "heat"; }
+  if(s.heatMargin/Math.max(1,s.heat) < wm) worst = "heat";
   return worst;
 }
-
 var ANOMALY = {
   twr:"上昇が鈍く、予定の姿勢を保てないまま推進剤を使い切りました。推力に余裕を。",
   dv:"帰還噴射の途中で燃料が尽きました。タンクか比推力の高いエンジンを。",
@@ -905,54 +837,74 @@ var ANOMALY = {
    ============================================================ */
 var elGrid = document.getElementById("grid");
 var elShip = document.getElementById("ship");
-var held = null;   // 選択中パーツID
-var ghost = null;
+var elIsoW = document.getElementById("isoWrap");
+var elIso  = document.getElementById("isoScene");
+var held = null, ghost = null, focusUid = null, gridGeom = "";
+var lastStats = null, lastReady = false, lastRel = 0;
 
-function buildGrid(){
-  for(var y=0; y<ROWS; y++){
-    for(var x=0; x<COLS; x++){
+function curDepth(){ return state.depth[state.view] || 0; }
+
+function buildCells(){
+  var v = VIEWS[state.view];
+  var geom = state.view + ":" + v.cols + "x" + v.rows;
+  if(geom === gridGeom) return;
+  gridGeom = geom;
+  Array.prototype.forEach.call(elGrid.querySelectorAll(".cell"), function(c){
+    c.parentNode.removeChild(c);
+  });
+  elGrid.style.setProperty("--cols", v.cols);
+  elGrid.style.setProperty("--rows", v.rows);
+  elShip.style.setProperty("--cols", v.cols);
+  elShip.style.setProperty("--rows", v.rows);
+  for(var sy=0; sy<v.rows; sy++){
+    for(var sx=0; sx<v.cols; sx++){
       var c = document.createElement("button");
-      c.type = "button";
-      c.className = "cell";
-      c.style.setProperty("--cx", x+1);
-      c.style.setProperty("--cy", y+1);
-      c.dataset.x = x; c.dataset.y = y;
-      if(x === 0) c.dataset.lane = "1";
-      c.setAttribute("aria-label", "区画 " + (x+1) + "-" + (y+1));
+      c.type = "button"; c.className = "cell";
+      c.style.setProperty("--cx", sx+1);
+      c.style.setProperty("--cy", sy+1);
+      c.dataset.sx = sx; c.dataset.sy = sy;
+      if(state.view !== "front" && sx === 0) c.dataset.lane = "1";
+      if(state.view === "top"   && sy === Math.floor(ZMAX/2)) c.dataset.mid = "1";
+      if(state.view === "front" && sx === Math.floor(ZMAX/2)) c.dataset.mid = "1";
+      c.setAttribute("aria-label", "区画 "+(sx+1)+"-"+(sy+1));
       c.addEventListener("click", onCell);
       c.addEventListener("mouseenter", onHover);
       elGrid.insertBefore(c, elShip);
     }
   }
-  elGrid.addEventListener("mouseleave", clearGhost);
 }
 
-function onCell(e){
-  var x = +this.dataset.x, y = +this.dataset.y;
+function plannedTarget(sx, sy){
+  var p = PMAP[held], v = VIEWS[state.view];
+  var dl = depthLen(state.view, p);
+  var d = Math.min(curDepth(), v.depthMax - dl);
+  if(d < 0) d = 0;
+  return toWorld(state.view, sx, sy, d, p);
+}
+
+function onCell(){
   if(!held) return;
-  var p = PMAP[held];
-  if(!fits(held, x, y, null)){ toast("そこには入りません"); return; }
-  place(held, x, y);
+  var t = plannedTarget(+this.dataset.sx, +this.dataset.sy);
+  if(!placeMaybeMirrored(held, t.x, t.y, t.z)){ toast("そこには入りません"); return; }
   refresh();
-  e.stopPropagation();
 }
-
 function onHover(){
   if(!held) return;
-  var x = +this.dataset.x, y = +this.dataset.y;
-  drawGhost(x, y);
+  drawGhost(+this.dataset.sx, +this.dataset.sy);
 }
 
-function drawGhost(x, y){
+function drawGhost(sx, sy){
   clearGhost();
-  var p = PMAP[held];
+  var t = plannedTarget(sx, sy);
+  var ok = fits(held, t.x, t.y, t.z, null);
+  var r = toScreen(state.view, {id:held, x:t.x, y:t.y, z:t.z});
   ghost = document.createElement("div");
-  ghost.className = "ghost" + (fits(held, x, y, null) ? "" : " no");
-  ghost.style.left = "calc(var(--cell) * " + x + ")";
-  ghost.style.top  = "calc(var(--cell) * " + y + ")";
-  ghost.style.width  = "calc(var(--cell) * " + p.w + ")";
-  ghost.style.height = "calc(var(--cell) * " + p.h + ")";
-  ghost.innerHTML = svgFor(held);
+  ghost.className = "ghost" + (ok ? "" : " no");
+  ghost.style.left   = "calc(var(--cell) * " + r.sx + ")";
+  ghost.style.top    = "calc(var(--cell) * " + r.sy + ")";
+  ghost.style.width  = "calc(var(--cell) * " + r.sw + ")";
+  ghost.style.height = "calc(var(--cell) * " + r.sh + ")";
+  ghost.innerHTML = state.view === "side" ? profileSVG(held, r.sw, r.sh) : blockSVG(held, r.sw, r.sh, state.view);
   elGrid.appendChild(ghost);
 }
 function clearGhost(){
@@ -960,135 +912,279 @@ function clearGhost(){
   ghost = null;
 }
 
-function renderShip(s){
+function renderOrtho(s){
   elShip.innerHTML = "";
+  var cur = curDepth();
   Object.keys(state.parts).forEach(function(uid){
     var inst = state.parts[uid], p = PMAP[inst.id];
-    var el = document.createElement("button");
-    el.type = "button";
-    el.className = "part";
-    if(s && (s.loose.indexOf(inst) >= 0 || s.blocked.indexOf(inst) >= 0)) el.className += " bad";
-    el.style.gridColumn = (inst.x+1) + " / span " + p.w;
-    el.style.gridRow    = (inst.y+1) + " / span " + p.h;
-    el.title = p.name + "（クリックで撤去）";
-    el.setAttribute("aria-label", p.name + " を撤去");
-    el.innerHTML = svgFor(inst.id);
-    if(p.thrust){
-      var f = document.createElement("div");
-      f.className = "flame";
-      el.appendChild(f);
+    var r = toScreen(state.view, inst);
+    var onLayer = cur >= r.d0 && cur < r.d0 + r.dl;
+    var el = document.createElement(onLayer ? "button" : "div");
+    var cls = "part" + (onLayer ? "" : " ghosted");
+    if(s && (s.loose.indexOf(inst) >= 0 || s.blocked.indexOf(inst) >= 0)) cls += " bad";
+    if(uid === focusUid) cls += " focus";
+    el.className = cls;
+    el.style.gridColumn = (r.sx+1) + " / span " + r.sw;
+    el.style.gridRow    = (r.sy+1) + " / span " + r.sh;
+    if(!onLayer){
+      var dist = cur < r.d0 ? r.d0 - cur : cur - (r.d0 + r.dl - 1);
+      el.style.opacity = Math.max(0.09, 0.3 - (dist-1)*0.07);
     }
-    el.addEventListener("click", function(ev){
-      ev.stopPropagation();
-      remove(uid);
-      refresh();
-    });
+    el.innerHTML = state.view === "side" ? profileSVG(inst.id, r.sw, r.sh) : blockSVG(inst.id, r.sw, r.sh, state.view);
+    if(onLayer){
+      el.type = "button";
+      el.title = p.name + "（クリックで撤去）";
+      el.setAttribute("aria-label", p.name + " を撤去");
+      el.addEventListener("click", function(ev){ ev.stopPropagation(); removeGroup(uid); refresh(); });
+    }
     elShip.appendChild(el);
   });
 }
 
+/* ---------- 立体 (CSS 3D) ---------- */
+var SYS_HEX = {command:"#3f7086", structure:"#4c5a62", prop:"#8d5c2b", power:"#3e7f5f", utility:"#6a5470"};
+function shade(hex, k){
+  var n = parseInt(hex.slice(1), 16);
+  var r = Math.min(255, Math.round(((n>>16)&255)*k));
+  var g = Math.min(255, Math.round(((n>>8)&255)*k));
+  var b = Math.min(255, Math.round((n&255)*k));
+  return "rgb("+r+","+g+","+b+")";
+}
+
+function buildIso(host, C, withPlumes){
+  host.innerHTML = "";
+  var pivot = document.createElement("div");
+  pivot.className = "iso-pivot";
+  pivot.style.transform = "translate3d("+(-XMAX*C/2)+"px,"+(-YMAX*C/2)+"px,"+(-ZMAX*C/2)+"px)";
+
+  Object.keys(state.parts).forEach(function(uid){
+    var inst = state.parts[uid], p = PMAP[inst.id], base = SYS_HEX[p.cat];
+    var wrap = document.createElement("div");
+    wrap.style.position = "absolute";
+    wrap.style.transformStyle = "preserve-3d";
+
+    var x = inst.x*C, y = inst.y*C, z = inst.z*C;
+    var w = p.w*C, h = p.h*C, d = p.d*C;
+    function face(fw, fh, tf, k){
+      var f = document.createElement("div");
+      f.className = "iso-face";
+      f.style.width = fw + "px";
+      f.style.height = fh + "px";
+      f.style.background = shade(base, k);
+      f.style.transform = tf;
+      wrap.appendChild(f);
+    }
+    face(w, h, "translate3d("+x+"px,"+y+"px,"+(z+d)+"px)", 0.94);            /* 左舷 +Z */
+    face(w, h, "translate3d("+x+"px,"+y+"px,"+z+"px)", 0.58);                 /* 右舷 -Z */
+    face(d, h, "translate3d("+(x+w)+"px,"+y+"px,"+z+"px) rotateY(-90deg)", 0.78); /* 船首 +X */
+    face(d, h, "translate3d("+x+"px,"+y+"px,"+z+"px) rotateY(-90deg)", 0.5);  /* 船尾 -X */
+    face(w, d, "translate3d("+x+"px,"+y+"px,"+z+"px) rotateX(90deg)", 1.16);  /* 上面 -Y */
+    face(w, d, "translate3d("+x+"px,"+(y+h)+"px,"+z+"px) rotateX(90deg)", 0.44); /* 底面 +Y */
+
+    if(withPlumes && p.thrust){
+      var pl = document.createElement("div");
+      pl.className = "plume";
+      var len = C * (2 + Math.min(3.4, p.thrust/420));
+      pl.style.width = len + "px";
+      pl.style.height = (h*0.72) + "px";
+      var tf = "translate3d("+(x-len)+"px,"+(y+h*0.14)+"px,"+(z+d/2)+"px)";
+      pl.style.setProperty("--pt", tf);
+      pl.style.transform = tf;
+      wrap.appendChild(pl);
+    }
+    pivot.appendChild(wrap);
+  });
+  host.appendChild(pivot);
+}
+
+function renderIso(){
+  if(!Object.keys(state.parts).length){
+    elIso.style.transform = "none";
+    elIso.innerHTML = '<span class="iso-empty">パーツを置くと、ここに組み上がりが出ます</span>';
+    return;
+  }
+  elIso.style.transform = "rotateX(-24deg) rotateY(-30deg)";
+  var C = Math.max(20, Math.min(54, Math.round(460 / XMAX)));
+  buildIso(elIso, C, false);
+}
+
+function renderView(s){
+  var v = VIEWS[state.view];
+  var isIso = state.view === "iso";
+  elGrid.hidden = isIso;
+  elIsoW.hidden = !isIso;
+  document.getElementById("depthBar").hidden = isIso;
+  document.getElementById("axL").textContent = isIso ? "" : v.axL;
+  document.getElementById("axR").textContent = isIso ? "船首は右奥" : v.axR;
+  if(isIso){ clearGhost(); renderIso(); return; }
+  buildCells();
+  renderOrtho(s);
+}
+
+function renderTabs(){
+  var t = document.getElementById("tabs");
+  t.innerHTML = VIEW_ORDER.map(function(id){
+    var v = VIEWS[id];
+    return '<button type="button" class="tab'+(state.view===id?" sel":"")+'" data-view="'+id+'">'+
+           '<b>'+v.label+'</b><i>'+v.sub+'</i></button>';
+  }).join("");
+  Array.prototype.forEach.call(t.querySelectorAll(".tab"), function(b){
+    b.addEventListener("click", function(){
+      state.view = this.dataset.view;
+      focusUid = null;
+      clearGhost();
+      renderTabs();
+      refresh();
+    });
+  });
+}
+
+function renderDepth(){
+  if(state.view === "iso") return;
+  var v = VIEWS[state.view], cur = curDepth();
+  document.getElementById("depthLab").textContent = "断面 " + v.depthAxis.toUpperCase();
+  document.getElementById("depthVal").textContent = (cur+1) + " / " + v.depthMax;
+  var r = document.getElementById("depthRange");
+  r.max = v.depthMax - 1;
+  r.value = cur;
+  document.getElementById("depthNote").textContent = v.note;
+}
+
 function renderBin(){
-  var body = document.getElementById("binBody");
-  var un = unlockedIds();
-  var html = "";
+  var body = document.getElementById("binBody"), un = unlockedIds(), html = "";
   CATS.forEach(function(cat){
     html += '<div class="cat">' + cat.label + '</div><div class="bin-list">';
     PARTS.filter(function(p){ return p.cat === cat.id; }).forEach(function(p){
       var open = !!un[p.id];
       var cls = "chip" + (open ? "" : " locked") + (held === p.id ? " held" : "");
-      html += '<button type="button" class="' + cls + '" data-part="' + p.id + '"' +
-              (open ? "" : " disabled") + '>' +
-              '<span class="thumb">' + svgFor(p.id) + '</span>' +
-              '<span class="nm"><b>' + p.name + '</b><i>' + p.w + '×' + p.h + ' · ' + p.mass + 't · ' + p.blurb + '</i></span>' +
-              '<span class="price">' + p.cost + '</span>';
+      html += '<button type="button" class="'+cls+'" data-part="'+p.id+'" style="--sys:var(--sys-'+p.cat+')"'+(open?"":" disabled")+'>'+
+              '<span class="swatch"></span>'+
+              '<span class="thumb">'+profileSVG(p.id, p.w, p.h)+'</span>'+
+              '<span class="nm"><b>'+p.name+'</b><i>'+p.w+'×'+p.h+'×'+p.d+' · '+p.mass+'t · '+p.blurb+'</i></span>'+
+              '<span class="price">'+p.cost+'</span>';
       if(!open){
         var c = unlockContractOf(p.id);
-        html += '<span class="lockmsg">「' + (c ? c.name : "?") + '」の達成で解禁</span>';
+        html += '<span class="lockmsg">「'+(c?c.name:"?")+'」の達成で解禁</span>';
       }
       html += '</button>';
     });
     html += '</div>';
   });
   body.innerHTML = html;
-  var count = PARTS.filter(function(p){ return un[p.id]; }).length;
-  document.getElementById("binCount").textContent = count + " / " + PARTS.length + " 種";
+  document.getElementById("binCount").textContent =
+    PARTS.filter(function(p){ return un[p.id]; }).length + " / " + PARTS.length + " 種";
 
   Array.prototype.forEach.call(body.querySelectorAll(".chip"), function(btn){
     btn.addEventListener("click", function(){
       var id = this.dataset.part;
       held = (held === id) ? null : id;
+      if(held && state.view === "iso"){ state.view = "side"; renderTabs(); }
       clearGhost();
       elGrid.classList.toggle("placing", !!held);
       renderBin();
+      refresh();
     });
   });
 }
 
-function renderReadout(s, c){
-  var pw = s.power >= 0 ? "ok" : "warn";
-  var ht = s.heatMargin >= 0 ? "ok" : "warn";
+function renderLegend(){
+  var host = document.getElementById("legend");
+  if(state.view === "side"){
+    host.innerHTML = '<span>側面図は実形状。平面図・正面図は系統色のブロック表示です。</span>';
+  }else if(state.view === "iso"){
+    host.innerHTML = '<span>系統色は平面図・正面図と共通です。</span>';
+  }else{
+    host.innerHTML = CATS.map(function(c){
+      return '<span style="--sys:var(--sys-'+c.id+')"><i></i>'+c.label+'</span>';
+    }).join("");
+  }
+}
+
+function renderReadout(s){
   var rows = [
-    ["総質量", s.wetMass.toFixed(1) + '<small>t</small>', "data"],
+    ["総質量", s.wetMass.toFixed(1)+'<small>t</small>', "data"],
     ["推力比", s.twr.toFixed(2), s.twr >= 1 ? "ok" : ""],
     ["Δv", Math.round(s.dv), "data"],
-    ["電力", (s.power >= 0 ? "+" : "") + s.power + '<small>kW</small>', pw],
-    ["排熱余裕", (s.heatMargin >= 0 ? "+" : "") + s.heatMargin, ht],
+    ["電力", (s.power>=0?"+":"")+s.power+'<small>kW</small>', s.power>=0?"ok":"warn"],
+    ["排熱余裕", (s.heatMargin>=0?"+":"")+s.heatMargin, s.heatMargin>=0?"ok":"warn"],
     ["船体強度", s.hull, ""],
-    ["乗員 / 積載", s.crew + " / " + s.cargo, ""],
+    ["乗員 / 積載", s.crew+" / "+s.cargo, ""],
     ["観測機器", s.sensors, ""]
   ];
   document.getElementById("readout").innerHTML = rows.map(function(r){
-    return '<div class="stat ' + r[2] + '"><i>' + r[0] + '</i><b>' + r[1] + '</b></div>';
+    return '<div class="stat '+r[2]+'"><i>'+r[0]+'</i><b>'+r[1]+'</b></div>';
   }).join("");
 }
 
 function renderContract(s){
   var c = CONTRACTS[state.contract];
-  document.getElementById("cIdx").textContent = "契約 " + (state.contract+1) + " / " + CONTRACTS.length;
+  document.getElementById("cIdx").textContent = "契約 "+(state.contract+1)+" / "+CONTRACTS.length;
   document.getElementById("cName").textContent = c.name;
   document.getElementById("cBrief").textContent = c.brief;
   document.getElementById("cReqs").innerHTML = c.reqs.map(function(rq){
-    var have = reqValue(s, rq.k);
-    var met = have >= rq.min;
-    return '<div class="req' + (met ? " met" : "") + '"><span class="dot"></span>' +
-           rq.label + ' ≥ ' + rq.min +
-           '<span class="val">' + fmtReq(rq.k, have) + '</span></div>';
+    var have = reqValue(s, rq.k), met = have >= rq.min;
+    return '<div class="req'+(met?" met":"")+'"><span class="dot"></span>'+rq.label+' ≥ '+rq.min+
+           '<span class="val">'+fmtReq(rq.k, have)+'</span></div>';
   }).join("");
   var repeat = !!state.done[c.id];
   document.getElementById("cPay").textContent = (repeat ? Math.round(c.pay*0.3) : c.pay) + " CR";
-  document.getElementById("cDone").innerHTML = repeat
-    ? '<span class="done-stamp">達成済 · 再受注は報酬30%</span>' : "";
+  document.getElementById("cDone").innerHTML = repeat ? '<span class="done-stamp">達成済 · 再受注は報酬30%</span>' : "";
   return c;
 }
 
+function jumpTo(inst){
+  if(state.view === "iso"){ state.view = "side"; renderTabs(); }
+  var v = VIEWS[state.view];
+  var r = toScreen(state.view, inst);
+  state.depth[state.view] = Math.max(0, Math.min(v.depthMax-1, r.d0));
+  focusUid = inst.uid;
+  refresh();
+  toast(PMAP[inst.id].name + " の断面を表示しました");
+}
+
 function renderFaults(s, c){
-  var out = [];
-  s.faults.forEach(function(f){ out.push('<div class="fault">' + f + '</div>'); });
+  var host = document.getElementById("faults");
+  host.innerHTML = "";
   var unmet = c.reqs.filter(function(rq){ return reqValue(s, rq.k) < rq.min; });
+
   if(!s.count){
-    out = ['<div class="fault ok">倉庫からパーツを選び、ドックに並べてください。まずは司令部・推進・燃料から。</div>'];
-  }else{
-    if(unmet.length){
-      out.push('<div class="fault">契約条件が未達：' +
-        unmet.map(function(r){ return r.label; }).join("・") + '</div>');
-    }
-    if(!out.length){
-      out.push('<div class="fault ok">全項目が基準を満たしています。いつでも出せます。</div>');
-    }
+    host.innerHTML = '<div class="fault ok">倉庫からパーツを選び、ドックに並べてください。まずは司令部・推進・燃料から。</div>';
+    return false;
   }
-  document.getElementById("faults").innerHTML = out.join("");
-  return s.faults.length === 0 && unmet.length === 0 && s.count > 0;
+  s.faults.forEach(function(f){
+    var el = document.createElement(f.jump ? "button" : "div");
+    el.className = "fault";
+    el.innerHTML = '<span>'+f.msg+'</span>' + (f.jump ? '<span class="jump">表示 →</span>' : "");
+    if(f.jump){
+      el.type = "button";
+      el.addEventListener("click", function(){ jumpTo(f.jump); });
+    }
+    host.appendChild(el);
+  });
+  if(unmet.length){
+    var d = document.createElement("div");
+    d.className = "fault";
+    d.textContent = "契約条件が未達：" + unmet.map(function(r){ return r.label; }).join("・");
+    host.appendChild(d);
+  }
+  if(!s.faults.length && !unmet.length){
+    host.innerHTML = '<div class="fault ok">全項目が基準を満たしています。いつでも出せます。</div>';
+    return true;
+  }
+  return false;
 }
 
 function refresh(){
   var s = analyze();
   var c = renderContract(s);
-  renderShip(s);
-  renderReadout(s, c);
+  renderView(s);
+  renderDepth();
+  renderLegend();
+  renderReadout(s);
   var ready = renderFaults(s, c);
 
   var rel = ready ? reliability(s, c) : 0;
-  document.getElementById("relyVal").textContent = ready ? rel + "%" : "--%";
+  document.getElementById("relyVal").textContent = ready ? rel+"%" : "--%";
   document.getElementById("relyBar").style.width = (ready ? rel : 0) + "%";
   document.getElementById("relyNote").textContent = ready
     ? "余裕の薄い項目が事故の芽になります。基準ぎりぎりの設計は失敗しやすくなります。"
@@ -1096,13 +1192,19 @@ function refresh(){
 
   document.getElementById("mCred").textContent = state.credits;
   document.getElementById("mBuild").textContent = s.cost;
+  document.getElementById("bayDim").textContent = XMAX+" × "+YMAX+" × "+ZMAX+" ハードポイント";
   document.getElementById("bLaunch").disabled = !ready;
   document.getElementById("bLaunch").textContent = ready ? "打ち上げ" : "点検未了";
+  document.getElementById("bMirror").classList.toggle("on", state.mirror);
+  document.getElementById("hint").innerHTML = state.view === "iso"
+    ? '<span><b>立体は確認専用</b>です。配置は三面図で行います</span>'
+    : '<span><b>倉庫でパーツを選ぶ</b> → 空きマスをクリックで設置</span>'+
+      '<span><b>設置済みをクリック</b>で撤去</span>'+
+      '<span><b>[ ]</b> で断面移動</span><span><b>Esc</b>で選択解除</span>';
 
   lastStats = s; lastReady = ready; lastRel = rel;
   save();
 }
-var lastStats = null, lastReady = false, lastRel = 0;
 
 /* ============================================================
    打ち上げ
@@ -1111,42 +1213,31 @@ var elLaunch = document.getElementById("launch");
 var elFlier  = document.getElementById("flier");
 var elTelem  = document.getElementById("telem");
 var elVerdict= document.getElementById("verdict");
-var sky = document.getElementById("sky");
-var ctx = sky.getContext("2d");
+var sky = document.getElementById("sky"), ctx = sky.getContext("2d");
 var stars = [], skyRun = false, skySpeed = 0, rafId = 0;
+var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function initSky(){
   sky.width  = sky.clientWidth  * (window.devicePixelRatio || 1);
   sky.height = sky.clientHeight * (window.devicePixelRatio || 1);
   stars = [];
   var n = Math.round(sky.width * sky.height / 9000);
-  for(var i=0;i<n;i++){
-    stars.push({
-      x:Math.random()*sky.width,
-      y:Math.random()*sky.height,
-      z:Math.random()*0.85 + 0.15
-    });
-  }
+  for(var i=0;i<n;i++) stars.push({x:Math.random()*sky.width, y:Math.random()*sky.height, z:Math.random()*0.85+0.15});
 }
 function drawSky(){
   if(!skyRun) return;
   ctx.fillStyle = "#050a0d";
   ctx.fillRect(0,0,sky.width,sky.height);
   for(var i=0;i<stars.length;i++){
-    var s = stars[i];
-    var len = skySpeed * s.z * 9;
-    ctx.strokeStyle = "rgba(200,224,232," + (0.22 + s.z*0.6) + ")";
-    ctx.lineWidth = s.z * 1.7;
-    ctx.beginPath();
-    ctx.moveTo(s.x, s.y);
-    ctx.lineTo(s.x, s.y + len + 1);
-    ctx.stroke();
+    var s = stars[i], len = skySpeed * s.z * 9;
+    ctx.strokeStyle = "rgba(200,224,232,"+(0.22+s.z*0.6)+")";
+    ctx.lineWidth = s.z*1.7;
+    ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x, s.y+len+1); ctx.stroke();
     s.y += skySpeed * s.z * 9;
     if(s.y > sky.height){ s.y = -20; s.x = Math.random()*sky.width; }
   }
   rafId = requestAnimationFrame(drawSky);
 }
-
 function line(text, cls, delay){
   var d = document.createElement("div");
   if(cls) d.className = cls;
@@ -1155,38 +1246,22 @@ function line(text, cls, delay){
   elTelem.appendChild(d);
 }
 
-var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
 function launch(){
   if(!lastReady) return;
-  var s = lastStats;
-  var c = CONTRACTS[state.contract];
-  var rel = lastRel;
+  var s = lastStats, c = CONTRACTS[state.contract], rel = lastRel;
   var success = (Math.random()*100) < rel;
-
-  // 建造費の支払い
   state.credits -= s.cost;
 
   elLaunch.classList.add("on");
   elVerdict.classList.remove("on");
   elTelem.innerHTML = "";
 
-  // 船を複製して縦向きに
-  var clone = elShip.cloneNode(true);
-  clone.removeAttribute("id");
-  Array.prototype.forEach.call(clone.querySelectorAll(".part"), function(p){
-    p.removeAttribute("title");
-    p.setAttribute("tabindex","-1");
-  });
-  elFlier.innerHTML = "";
-  var scale = Math.min(1.5, (window.innerHeight * 0.52) / (COLS * 44));
-  clone.style.width  = (COLS * 44) + "px";
-  clone.style.height = (ROWS * 44) + "px";
-  clone.style.setProperty("--cell", "44px");
-  elFlier.appendChild(clone);
+  var C = Math.max(18, Math.min(44, Math.round(window.innerHeight * 0.42 / XMAX)));
+  buildIso(elFlier, C, true);
   elFlier.classList.add("flying");
+  var pose = "rotateX(-12deg) rotateY(-26deg) rotateZ(-90deg)";
   elFlier.style.transition = "none";
-  elFlier.style.transform = "rotate(-90deg) scale(" + scale + ") translateX(-46vh)";
+  elFlier.style.transform = "translateY(48vh) " + pose;
 
   initSky();
   skyRun = true; skySpeed = 0.4;
@@ -1194,77 +1269,62 @@ function launch(){
   drawSky();
 
   var t = 0, step = reduceMotion ? 60 : 620;
-  line("▸ " + state.name + " · " + c.name, "", t); t += step;
+  line("▸ "+state.name+" · "+c.name, "", t); t += step;
   line("固縛解除 — 支持架後退", "", t); t += step;
-  line("主機点火 · 推力 " + Math.round(s.thrust) + " kN", "okline", t); t += step;
+  line("主機点火 · 推力 "+Math.round(s.thrust)+" kN", "okline", t); t += step;
 
   setTimeout(function(){
     elFlier.style.transition = "transform 3.4s cubic-bezier(.5,0,.55,1)";
-    elFlier.style.transform = "rotate(-90deg) scale(" + scale + ") translateX(52vh)";
+    elFlier.style.transform = "translateY(-54vh) " + pose;
     skySpeed = 3.4;
   }, reduceMotion ? 30 : 900);
 
-  line("上昇率 良好 · 推力比 " + s.twr.toFixed(2), "", t); t += step;
-  line("Δv 残 " + Math.round(s.dv) + " · 母線 " + (s.power>=0?"+":"") + s.power + " kW", "", t); t += step;
-
+  line("上昇率 良好 · 推力比 "+s.twr.toFixed(2), "", t); t += step;
+  line("Δv 残 "+Math.round(s.dv)+" · 母線 "+(s.power>=0?"+":"")+s.power+" kW", "", t); t += step;
   if(success){
     line("軌道投入 — 目標へ遷移", "okline", t); t += step;
     line("任務完了 · 帰投", "okline", t); t += step;
   }else{
     var w = weakest(s, c);
-    line("!! 異常検知 — " + (w === "heat" ? "熱系統" : "航行系統"), "warnline", t); t += step;
+    line("!! 異常検知 — "+(w === "heat" ? "熱系統" : "航行系統"), "warnline", t); t += step;
     line("任務中断", "warnline", t); t += step;
   }
-
   setTimeout(function(){ finish(success, s, c, rel); }, t + (reduceMotion ? 100 : 500));
 }
 
 function finish(success, s, c, rel){
   var card = document.getElementById("card");
   var repeat = !!state.done[c.id];
-  var pay = repeat ? Math.round(c.pay * 0.3) : c.pay;
-  var salvage = Math.round(s.cost * 0.7);
-  var newlyOpen = [];
+  var pay = repeat ? Math.round(c.pay*0.3) : c.pay;
+  var salvage = Math.round(s.cost*0.7);
+  var newlyOpen = [], granted = false;
 
   if(success){
     state.credits += pay;
-    if(!state.done[c.id]){
-      state.done[c.id] = true;
-      newlyOpen = c.unlocks.slice();
-    }
+    if(!state.done[c.id]){ state.done[c.id] = true; newlyOpen = c.unlocks.slice(); }
   }else{
     state.credits += salvage;
   }
-  if(state.credits < 200){
-    state.credits = 200;
-    var granted = true;
-  }
+  if(state.credits < 200){ state.credits = 200; granted = true; }
 
-  var html = '<div class="kicker">' + c.name + ' · ' + state.name + '</div>';
-  html += '<h2>' + (success ? "任務完了" : "任務失敗") + '</h2>';
-  if(success){
-    html += '<p>' + (repeat
-      ? "手慣れた航路です。ドックの帳簿に報酬が入りました。"
-      : "設計は持ちこたえました。新しい図面が倉庫に届いています。") + '</p>';
-  }else{
-    var w = weakest(s, c);
-    html += '<p>' + (ANOMALY[w] || "原因不明の異常で任務は中断されました。") + '</p>';
-  }
+  var html = '<div class="kicker">'+c.name+' · '+state.name+'</div>';
+  html += '<h2>'+(success ? "任務完了" : "任務失敗")+'</h2>';
+  html += '<p>' + (success
+    ? (repeat ? "手慣れた航路です。ドックの帳簿に報酬が入りました。"
+              : "設計は持ちこたえました。新しい図面が倉庫に届いています。")
+    : (ANOMALY[weakest(s,c)] || "原因不明の異常で任務は中断されました。")) + '</p>';
 
-  html += '<div class="ledger">';
-  html += '<div><span>建造費</span><b>-' + s.cost + ' CR</b></div>';
-  if(success) html += '<div class="gain"><span>報酬</span><b>+' + pay + ' CR</b></div>';
-  else        html += '<div class="loss"><span>回収（建造費の70%）</span><b>+' + salvage + ' CR</b></div>';
-  html += '<div><span>成功率</span><b>' + rel + '%</b></div>';
+  html += '<div class="ledger"><div><span>建造費</span><b>-'+s.cost+' CR</b></div>';
+  html += success ? '<div class="gain"><span>報酬</span><b>+'+pay+' CR</b></div>'
+                  : '<div class="loss"><span>回収（建造費の70%）</span><b>+'+salvage+' CR</b></div>';
+  html += '<div><span>成功率</span><b>'+rel+'%</b></div>';
   if(granted) html += '<div class="gain"><span>ドック補助金</span><b>残高を200 CRへ</b></div>';
-  html += '<div><span>資金残高</span><b>' + state.credits + ' CR</b></div>';
-  html += '</div>';
+  html += '<div><span>資金残高</span><b>'+state.credits+' CR</b></div></div>';
 
   if(newlyOpen.length){
-    html += '<div class="unlocked"><b>新しく解禁されたパーツ</b>' +
-            newlyOpen.map(function(id){ return PMAP[id].name; }).join(" · ") + '</div>';
+    html += '<div class="unlocked"><b>新しく解禁されたパーツ</b>'+
+            newlyOpen.map(function(id){ return PMAP[id].name; }).join(" · ")+'</div>';
   }
-
   html += '<button class="btn go" id="bBack" type="button">ドックへ戻る</button>';
   card.className = "card " + (success ? "win" : "lose");
   card.innerHTML = html;
@@ -1275,9 +1335,7 @@ function finish(success, s, c, rel){
     elFlier.classList.remove("flying");
     skyRun = false;
     cancelAnimationFrame(rafId);
-    if(success && state.contract < CONTRACTS.length - 1 && newlyOpen.length){
-      state.contract++;
-    }
+    if(success && state.contract < CONTRACTS.length-1 && newlyOpen.length) state.contract++;
     renderBin();
     refresh();
   });
@@ -1294,58 +1352,83 @@ function toast(msg){
   toastTimer = setTimeout(function(){ toastEl.classList.remove("on"); }, 1700);
 }
 
+function stepDepth(delta){
+  if(state.view === "iso") return;
+  var v = VIEWS[state.view];
+  state.depth[state.view] = Math.max(0, Math.min(v.depthMax-1, curDepth() + delta));
+  clearGhost();
+  refresh();
+}
+
 /* ============================================================
    配線
    ============================================================ */
-buildGrid();
 load();
+renderTabs();
 document.getElementById("shipName").value = state.name;
 renderBin();
 refresh();
 
 document.getElementById("shipName").addEventListener("input", function(){
-  state.name = this.value || "無名船";
-  save();
+  state.name = this.value || "無名船"; save();
 });
 document.getElementById("bClear").addEventListener("click", function(){
   if(!Object.keys(state.parts).length) return;
   Object.keys(state.parts).forEach(function(uid){ remove(uid, true); });
-  state.history = [];
+  state.history = []; focusUid = null;
   refresh();
   toast("ドックを空にしました");
 });
 document.getElementById("bUndo").addEventListener("click", undo);
+document.getElementById("bMirror").addEventListener("click", function(){
+  state.mirror = !state.mirror;
+  refresh();
+  toast(state.mirror ? "左右対称モード: オン" : "左右対称モード: オフ");
+});
 document.getElementById("bLaunch").addEventListener("click", launch);
-document.getElementById("cPrev").addEventListener("click", function(){
-  state.contract = (state.contract - 1 + CONTRACTS.length) % CONTRACTS.length;
+document.getElementById("dPrev").addEventListener("click", function(){ stepDepth(-1); });
+document.getElementById("dNext").addEventListener("click", function(){ stepDepth(1); });
+document.getElementById("depthRange").addEventListener("input", function(){
+  state.depth[state.view] = +this.value;
+  clearGhost();
   refresh();
 });
+document.getElementById("cPrev").addEventListener("click", function(){
+  state.contract = (state.contract - 1 + CONTRACTS.length) % CONTRACTS.length; refresh();
+});
 document.getElementById("cNext").addEventListener("click", function(){
-  state.contract = (state.contract + 1) % CONTRACTS.length;
-  refresh();
+  state.contract = (state.contract + 1) % CONTRACTS.length; refresh();
 });
 document.getElementById("bReset").addEventListener("click", function(){
   if(!window.confirm("資金・解禁パーツ・建造中の船をすべて消して最初からやり直しますか？")) return;
   try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
   Object.keys(state.parts).forEach(function(uid){ remove(uid, true); });
-  state.credits = 250; state.done = {}; state.contract = 0; state.history = [];
-  held = null; elGrid.classList.remove("placing");
+  state.credits = 250; state.done = {}; state.contract = 0; state.history = []; state.mirror = false;
+  held = null; focusUid = null;
+  elGrid.classList.remove("placing");
   renderBin(); refresh();
   toast("記録を消去しました");
 });
+elGrid.addEventListener("mouseleave", clearGhost);
+
 document.addEventListener("keydown", function(e){
   if(e.key === "Escape"){
     if(elLaunch.classList.contains("on") && elVerdict.classList.contains("on")){
       var b = document.getElementById("bBack"); if(b) b.click();
       return;
     }
-    held = null; clearGhost(); elGrid.classList.remove("placing"); renderBin();
+    held = null; focusUid = null;
+    clearGhost();
+    elGrid.classList.remove("placing");
+    renderBin(); refresh();
+    return;
   }
+  if(e.target && e.target.tagName === "INPUT") return;
+  if(e.key === "["){ e.preventDefault(); stepDepth(-1); }
+  if(e.key === "]"){ e.preventDefault(); stepDepth(1); }
   if((e.ctrlKey || e.metaKey) && e.key === "z"){ e.preventDefault(); undo(); }
 });
-window.addEventListener("resize", function(){
-  if(skyRun) initSky();
-});
+window.addEventListener("resize", function(){ if(skyRun) initSky(); });
 })();
 </script>
 </body>
