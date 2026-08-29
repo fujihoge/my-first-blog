@@ -168,7 +168,10 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   grid-template-rows:repeat(var(--rows),var(--cell));
   pointer-events:none;
 }
-.part{position:relative;padding:0;border:none;background:none;display:block;pointer-events:auto;cursor:pointer;z-index:2}
+.part{position:relative;padding:0;border:none;background:none;display:block;pointer-events:auto;cursor:grab;touch-action:none;z-index:2}
+.part:active{cursor:grabbing}
+.part.dragging{opacity:.3;cursor:grabbing}
+.grid.moving .cell{cursor:grabbing}
 .part svg{display:block;width:100%;height:100%;overflow:visible}
 .part:hover::after{content:"";position:absolute;inset:-1px;border:1px solid var(--amber)}
 .part.ghosted{pointer-events:none;z-index:1;filter:saturate(.35)}
@@ -197,7 +200,25 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .hint b{color:var(--dim);font-weight:500}
 
 /* ---------- isometric ---------- */
-.iso-wrap{perspective:1500px;display:flex;align-items:center;justify-content:center;min-height:clamp(230px,36vh,360px)}
+.iso-wrap{
+  position:relative;perspective:1500px;display:flex;align-items:center;justify-content:center;
+  min-height:clamp(240px,40vh,420px);touch-action:none;cursor:grab;
+  -webkit-user-select:none;user-select:none;overflow:hidden;
+}
+.iso-wrap.grabbing{cursor:grabbing}
+.iso-hud{
+  position:absolute;right:10px;bottom:10px;display:flex;align-items:center;gap:9px;
+  font-family:var(--f-mono);font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums;
+}
+.iso-hud button{
+  border:1px solid var(--rule);background:var(--plate);color:var(--dim);padding:4px 10px;
+  font-family:var(--f-disp);font-size:11px;letter-spacing:.12em;
+}
+.iso-hud button:hover{color:var(--amber);border-color:var(--faint)}
+.iso-axes{
+  position:absolute;left:10px;top:10px;font-family:var(--f-mono);font-size:10px;color:var(--faint);
+  line-height:1.6;pointer-events:none;
+}
 .iso-scene{transform-style:preserve-3d;position:relative}
 .iso-pivot{transform-style:preserve-3d;position:absolute;top:0;left:0}
 .iso-face{position:absolute;top:0;left:0;transform-origin:0 0;border:1px solid rgba(6,10,13,.5)}
@@ -352,7 +373,11 @@ button.fault:hover{background:rgba(226,96,79,.16)}
     <div class="bay-frame" id="bayFrame">
       <div class="bay-axis"><span id="axL"></span><span class="bow" id="axR"></span></div>
       <div class="grid" id="grid"><div class="ship" id="ship"></div></div>
-      <div class="iso-wrap" id="isoWrap" hidden><div class="iso-scene" id="isoScene"></div></div>
+      <div class="iso-wrap" id="isoWrap" tabindex="0" hidden>
+        <div class="iso-scene" id="isoScene"></div>
+        <div class="iso-axes" id="isoAxes"></div>
+        <div class="iso-hud"><span id="isoZoom">100%</span><button type="button" id="isoReset">視点リセット</button></div>
+      </div>
     </div>
 
     <div class="legend" id="legend"></div>
@@ -604,7 +629,8 @@ function save(){
   try{
     localStorage.setItem(SAVE_KEY, JSON.stringify({
       parts:state.parts, seq:state.seq, credits:state.credits, done:state.done,
-      contract:state.contract, name:state.name, view:state.view, depth:state.depth, mirror:state.mirror
+      contract:state.contract, name:state.name, view:state.view, depth:state.depth, mirror:state.mirror,
+      cam:cam
     }));
   }catch(e){}
 }
@@ -621,6 +647,9 @@ function load(){
     state.seq = d.seq || 1;
     state.mirror = !!d.mirror;
     if(d.view && VIEWS[d.view]) state.view = d.view;
+    if(d.cam) ["rx","ry","px","py","zoom"].forEach(function(k){
+      if(typeof d.cam[k] === "number" && isFinite(d.cam[k])) cam[k] = d.cam[k];
+    });
     if(d.depth) ["side","top","front"].forEach(function(v){
       if(typeof d.depth[v] === "number") state.depth[v] = d.depth[v];
     });
@@ -653,14 +682,14 @@ function unlockContractOf(partId){
    ============================================================ */
 function key(x,y,z){ return x+","+y+","+z; }
 
-function fits(partId, x, y, z, ignoreUid){
+function fits(partId, x, y, z, ignore){
   var p = PMAP[partId];
   if(x < 0 || y < 0 || z < 0 || x+p.w > XMAX || y+p.h > YMAX || z+p.d > ZMAX) return false;
   for(var dx=0; dx<p.w; dx++)
     for(var dy=0; dy<p.h; dy++)
       for(var dz=0; dz<p.d; dz++){
         var occ = state.cells[key(x+dx, y+dy, z+dz)];
-        if(occ && occ !== ignoreUid) return false;
+        if(occ && !(ignore && ignore[occ])) return false;
       }
   return true;
 }
@@ -702,18 +731,34 @@ function placeMaybeMirrored(partId, x, y, z){
   return true;
 }
 
-function removeGroup(uid){
+/* 左右対称モードで対になっている相方を探す */
+function twinOf(inst){
+  if(!state.mirror || !inst) return null;
+  var mz = mirrorZ(inst.id, inst.z);
+  if(mz === inst.z) return null;
+  var tid = state.cells[key(inst.x, inst.y, mz)];
+  var t = tid && state.parts[tid];
+  if(t && t !== inst && t.id === inst.id && t.x === inst.x && t.y === inst.y && t.z === mz) return t;
+  return null;
+}
+
+function groupOf(uid){
   var inst = state.parts[uid];
-  if(!inst) return;
-  var insts = [inst];
-  if(state.mirror){
-    var mz = mirrorZ(inst.id, inst.z);
-    if(mz !== inst.z){
-      var twinId = state.cells[key(inst.x, inst.y, mz)];
-      var t = twinId && state.parts[twinId];
-      if(t && t.id === inst.id && t.x === inst.x && t.y === inst.y && t.z === mz) insts.push(t);
-    }
-  }
+  if(!inst) return [];
+  var twin = twinOf(inst);
+  return twin ? [inst, twin] : [inst];
+}
+
+function boxesOverlap(partId, a, b){
+  var p = PMAP[partId];
+  return a.x < b.x+p.w && b.x < a.x+p.w &&
+         a.y < b.y+p.h && b.y < a.y+p.h &&
+         a.z < b.z+p.d && b.z < a.z+p.d;
+}
+
+function removeGroup(uid){
+  var insts = groupOf(uid);
+  if(!insts.length) return;
   insts.forEach(function(i){ remove(i.uid, true); });
   state.history.push({t:"del", insts:insts});
 }
@@ -721,8 +766,14 @@ function removeGroup(uid){
 function undo(){
   var h = state.history.pop();
   if(!h){ toast("これ以上戻せません"); return; }
-  if(h.t === "add") h.uids.forEach(function(u){ remove(u, true); });
-  else h.insts.forEach(function(i){ place(i.id, i.x, i.y, i.z, i.uid, true); });
+  if(h.t === "add"){
+    h.uids.forEach(function(u){ remove(u, true); });
+  }else if(h.t === "move"){
+    h.before.forEach(function(b){ remove(b.uid, true); });
+    h.before.forEach(function(b){ place(b.id, b.x, b.y, b.z, b.uid, true); });
+  }else{
+    h.insts.forEach(function(i){ place(i.id, i.x, i.y, i.z, i.uid, true); });
+  }
   refresh();
 }
 
@@ -839,7 +890,11 @@ var elGrid = document.getElementById("grid");
 var elShip = document.getElementById("ship");
 var elIsoW = document.getElementById("isoWrap");
 var elIso  = document.getElementById("isoScene");
-var held = null, ghost = null, focusUid = null, gridGeom = "";
+var held = null, ghosts = [], focusUid = null, gridGeom = "";
+var drag = null, lastDragEnd = 0, lastDragEl = null;
+/* ドラッグ直後に届く click だけを、その場で無視する。
+   グローバルなフラグにすると click が発火しなかったときに次の操作を巻き込む。 */
+function dragJustEnded(){ return Date.now() - lastDragEnd < 350; }
 var lastStats = null, lastReady = false, lastRel = 0;
 
 function curDepth(){ return state.depth[state.view] || 0; }
@@ -883,33 +938,105 @@ function plannedTarget(sx, sy){
 }
 
 function onCell(){
-  if(!held) return;
+  if(!held || dragJustEnded()) return;
   var t = plannedTarget(+this.dataset.sx, +this.dataset.sy);
   if(!placeMaybeMirrored(held, t.x, t.y, t.z)){ toast("そこには入りません"); return; }
   refresh();
 }
 function onHover(){
-  if(!held) return;
-  drawGhost(+this.dataset.sx, +this.dataset.sy);
+  if(!held || drag) return;
+  clearGhost();
+  var t = plannedTarget(+this.dataset.sx, +this.dataset.sy);
+  addGhost(held, t.x, t.y, t.z, fits(held, t.x, t.y, t.z, null));
 }
 
-function drawGhost(sx, sy){
-  clearGhost();
-  var t = plannedTarget(sx, sy);
-  var ok = fits(held, t.x, t.y, t.z, null);
-  var r = toScreen(state.view, {id:held, x:t.x, y:t.y, z:t.z});
-  ghost = document.createElement("div");
-  ghost.className = "ghost" + (ok ? "" : " no");
-  ghost.style.left   = "calc(var(--cell) * " + r.sx + ")";
-  ghost.style.top    = "calc(var(--cell) * " + r.sy + ")";
-  ghost.style.width  = "calc(var(--cell) * " + r.sw + ")";
-  ghost.style.height = "calc(var(--cell) * " + r.sh + ")";
-  ghost.innerHTML = state.view === "side" ? profileSVG(held, r.sw, r.sh) : blockSVG(held, r.sw, r.sh, state.view);
-  elGrid.appendChild(ghost);
+function addGhost(partId, wx, wy, wz, ok){
+  var r = toScreen(state.view, {id:partId, x:wx, y:wy, z:wz});
+  var g = document.createElement("div");
+  g.className = "ghost" + (ok ? "" : " no");
+  g.style.left   = "calc(var(--cell) * " + r.sx + ")";
+  g.style.top    = "calc(var(--cell) * " + r.sy + ")";
+  g.style.width  = "calc(var(--cell) * " + r.sw + ")";
+  g.style.height = "calc(var(--cell) * " + r.sh + ")";
+  g.innerHTML = state.view === "side" ? profileSVG(partId, r.sw, r.sh) : blockSVG(partId, r.sw, r.sh, state.view);
+  elGrid.appendChild(g);
+  ghosts.push(g);
 }
 function clearGhost(){
-  if(ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
-  ghost = null;
+  ghosts.forEach(function(g){ if(g.parentNode) g.parentNode.removeChild(g); });
+  ghosts = [];
+}
+
+/* ---------- 設置済みパーツのドラッグ移動 ----------
+   奥行きは変えない。別の軸へ動かすときはビューを切り替える。 */
+function cellFromPoint(cx, cy){
+  var v = VIEWS[state.view], rect = elGrid.getBoundingClientRect();
+  var w = elGrid.clientWidth / v.cols, h = elGrid.clientHeight / v.rows;
+  return {sx: Math.floor((cx - rect.left - elGrid.clientLeft) / w),
+          sy: Math.floor((cy - rect.top  - elGrid.clientTop ) / h)};
+}
+
+function startPartDrag(ev, uid, el){
+  if(ev.pointerType === "mouse" && ev.button !== 0) return;
+  var inst = state.parts[uid];
+  if(!inst) return;
+  var r = toScreen(state.view, inst), c = cellFromPoint(ev.clientX, ev.clientY);
+  var insts = groupOf(uid), ignore = {};
+  insts.forEach(function(i){ ignore[i.uid] = true; });
+  drag = {el:el, insts:insts, ignore:ignore, primary:inst,
+          gx:c.sx - r.sx, gy:c.sy - r.sy, d0:r.d0, sw:r.sw, sh:r.sh,
+          x0:ev.clientX, y0:ev.clientY, moved:false, ok:false, targets:null};
+  try{ el.setPointerCapture(ev.pointerId); }catch(e){}
+}
+
+function movePartDrag(ev){
+  if(!drag) return;
+  if(!drag.moved){
+    if(Math.abs(ev.clientX - drag.x0) < 4 && Math.abs(ev.clientY - drag.y0) < 4) return;
+    drag.moved = true;
+    drag.el.classList.add("dragging");
+    elGrid.classList.add("moving");
+  }
+  var v = VIEWS[state.view], c = cellFromPoint(ev.clientX, ev.clientY);
+  var sx = Math.max(0, Math.min(v.cols - drag.sw, c.sx - drag.gx));
+  var sy = Math.max(0, Math.min(v.rows - drag.sh, c.sy - drag.gy));
+  var t = toWorld(state.view, sx, sy, drag.d0, PMAP[drag.primary.id]);
+  var targets = [t];
+  if(drag.insts.length > 1) targets.push({x:t.x, y:t.y, z:mirrorZ(drag.primary.id, t.z)});
+
+  var ok = true;
+  for(var i=0;i<targets.length;i++){
+    if(!fits(drag.insts[i].id, targets[i].x, targets[i].y, targets[i].z, drag.ignore)){ ok = false; break; }
+  }
+  if(ok && targets.length > 1 && boxesOverlap(drag.primary.id, targets[0], targets[1])) ok = false;
+
+  drag.targets = targets; drag.ok = ok;
+  clearGhost();
+  targets.forEach(function(g, i){ addGhost(drag.insts[i].id, g.x, g.y, g.z, ok); });
+}
+
+function endPartDrag(){
+  if(!drag) return;
+  var d = drag; drag = null;
+  clearGhost();
+  elGrid.classList.remove("moving");
+  if(d.el) d.el.classList.remove("dragging");
+  if(!d.moved) return;                       // 動いていなければ通常のクリック（撤去）
+  /* 直後に届く click 一発だけを抑止する。click は pointerup と同じタスクで
+     配送されるので、次フレームで解除すれば取りこぼしも巻き込みも起きない。 */
+  lastDragEnd = Date.now(); lastDragEl = d.el;
+  requestAnimationFrame(function(){ lastDragEnd = 0; lastDragEl = null; });
+  if(!d.ok || !d.targets){ toast("そこには移動できません"); refresh(); return; }
+  var before = d.insts.map(function(i){ return {uid:i.uid, id:i.id, x:i.x, y:i.y, z:i.z}; });
+  var same = before.every(function(b, i){
+    return b.x === d.targets[i].x && b.y === d.targets[i].y && b.z === d.targets[i].z;
+  });
+  if(same){ refresh(); return; }
+  before.forEach(function(b){ remove(b.uid, true); });
+  before.forEach(function(b, i){ place(b.id, d.targets[i].x, d.targets[i].y, d.targets[i].z, b.uid, true); });
+  state.history.push({t:"move", before:before});
+  focusUid = null;
+  refresh();
 }
 
 function renderOrtho(s){
@@ -933,9 +1060,17 @@ function renderOrtho(s){
     el.innerHTML = state.view === "side" ? profileSVG(inst.id, r.sw, r.sh) : blockSVG(inst.id, r.sw, r.sh, state.view);
     if(onLayer){
       el.type = "button";
-      el.title = p.name + "（クリックで撤去）";
+      el.title = p.name + "（ドラッグで移動 / クリックで撤去）";
       el.setAttribute("aria-label", p.name + " を撤去");
-      el.addEventListener("click", function(ev){ ev.stopPropagation(); removeGroup(uid); refresh(); });
+      el.addEventListener("pointerdown", function(ev){ startPartDrag(ev, uid, el); });
+      el.addEventListener("pointermove", movePartDrag);
+      el.addEventListener("pointerup", endPartDrag);
+      el.addEventListener("pointercancel", endPartDrag);
+      el.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        if(ev.currentTarget === lastDragEl && dragJustEnded()) return;
+        removeGroup(uid); refresh();
+      });
     }
     elShip.appendChild(el);
   });
@@ -997,15 +1132,35 @@ function buildIso(host, C, withPlumes){
   host.appendChild(pivot);
 }
 
+/* ---------- 立体ビューのカメラ ---------- */
+var CAM0 = {rx:-24, ry:-30, px:0, py:0, zoom:1};
+var cam = {rx:CAM0.rx, ry:CAM0.ry, px:CAM0.px, py:CAM0.py, zoom:CAM0.zoom};
+function clampZoom(z){ return Math.max(0.3, Math.min(4, z)); }
+function normDeg(d){ return ((d % 360) + 360) % 360; }
+
+function applyCam(){
+  elIso.style.transform =
+    "translate("+Math.round(cam.px)+"px,"+Math.round(cam.py)+"px) scale("+cam.zoom.toFixed(3)+") "+
+    "rotateX("+cam.rx.toFixed(1)+"deg) rotateY("+cam.ry.toFixed(1)+"deg)";
+  var z = document.getElementById("isoZoom");
+  if(z) z.textContent = Math.round(cam.zoom*100) + "%";
+  var a = document.getElementById("isoAxes");
+  if(a) a.innerHTML = "方位 " + Math.round(normDeg(-cam.ry)) + "°<br>仰角 " + Math.round(-cam.rx) + "°";
+}
+function resetCam(){
+  cam.rx = CAM0.rx; cam.ry = CAM0.ry; cam.px = CAM0.px; cam.py = CAM0.py; cam.zoom = CAM0.zoom;
+  applyCam(); save();
+}
+
 function renderIso(){
   if(!Object.keys(state.parts).length){
-    elIso.style.transform = "none";
     elIso.innerHTML = '<span class="iso-empty">パーツを置くと、ここに組み上がりが出ます</span>';
+    applyCam();
     return;
   }
-  elIso.style.transform = "rotateX(-24deg) rotateY(-30deg)";
   var C = Math.max(20, Math.min(54, Math.round(460 / XMAX)));
   buildIso(elIso, C, false);
+  applyCam();
 }
 
 function renderView(s){
@@ -1197,9 +1352,12 @@ function refresh(){
   document.getElementById("bLaunch").textContent = ready ? "打ち上げ" : "点検未了";
   document.getElementById("bMirror").classList.toggle("on", state.mirror);
   document.getElementById("hint").innerHTML = state.view === "iso"
-    ? '<span><b>立体は確認専用</b>です。配置は三面図で行います</span>'
+    ? '<span><b>ドラッグ</b>で回転</span>'+
+      '<span><b>Shift+ドラッグ / 2本指</b>で平行移動</span>'+
+      '<span><b>ホイール / ピンチ</b>で拡大縮小</span>'+
+      '<span>配置は三面図で行います</span>'
     : '<span><b>倉庫でパーツを選ぶ</b> → 空きマスをクリックで設置</span>'+
-      '<span><b>設置済みをクリック</b>で撤去</span>'+
+      '<span><b>設置済みをドラッグ</b>で移動 / <b>クリック</b>で撤去</span>'+
       '<span><b>[ ]</b> で断面移動</span><span><b>Esc</b>で選択解除</span>';
 
   lastStats = s; lastReady = ready; lastRel = rel;
@@ -1409,7 +1567,87 @@ document.getElementById("bReset").addEventListener("click", function(){
   renderBin(); refresh();
   toast("記録を消去しました");
 });
-elGrid.addEventListener("mouseleave", clearGhost);
+elGrid.addEventListener("mouseleave", function(){ if(!drag) clearGhost(); });
+
+/* ---------- 立体ビュー: 回転・平行移動・拡大 ---------- */
+var isoPtr = {}, isoMode = null, isoLast = null, isoPinch = 0;
+function isoPointerIds(){ return Object.keys(isoPtr); }
+
+elIsoW.addEventListener("pointerdown", function(ev){
+  if(ev.target.closest && ev.target.closest(".iso-hud")) return;
+  isoPtr[ev.pointerId] = {x:ev.clientX, y:ev.clientY};
+  var ids = isoPointerIds();
+  if(ids.length === 1){
+    isoMode = (ev.shiftKey || ev.button === 1 || ev.button === 2) ? "pan" : "orbit";
+    isoLast = {x:ev.clientX, y:ev.clientY};
+    elIsoW.classList.add("grabbing");
+  }else if(ids.length === 2){
+    var a = isoPtr[ids[0]], b = isoPtr[ids[1]];
+    isoMode = "pinch";
+    isoPinch = Math.hypot(a.x-b.x, a.y-b.y) || 1;
+    isoLast = {x:(a.x+b.x)/2, y:(a.y+b.y)/2};
+  }
+  try{ elIsoW.setPointerCapture(ev.pointerId); }catch(e){}
+  elIsoW.focus();
+  ev.preventDefault();
+});
+
+elIsoW.addEventListener("pointermove", function(ev){
+  if(!isoPtr[ev.pointerId] || !isoMode) return;
+  isoPtr[ev.pointerId] = {x:ev.clientX, y:ev.clientY};
+  var ids = isoPointerIds();
+  if(isoMode === "pinch" && ids.length >= 2){
+    var a = isoPtr[ids[0]], b = isoPtr[ids[1]];
+    var dist = Math.hypot(a.x-b.x, a.y-b.y) || 1;
+    var mid = {x:(a.x+b.x)/2, y:(a.y+b.y)/2};
+    cam.zoom = clampZoom(cam.zoom * (dist / isoPinch));
+    cam.px += mid.x - isoLast.x;
+    cam.py += mid.y - isoLast.y;
+    isoPinch = dist; isoLast = mid;
+  }else{
+    var dx = ev.clientX - isoLast.x, dy = ev.clientY - isoLast.y;
+    if(isoMode === "pan"){
+      cam.px += dx; cam.py += dy;
+    }else{
+      cam.ry += dx * 0.45;
+      cam.rx = Math.max(-88, Math.min(88, cam.rx - dy * 0.45));
+    }
+    isoLast = {x:ev.clientX, y:ev.clientY};
+  }
+  applyCam();
+});
+
+function endIsoPointer(ev){
+  delete isoPtr[ev.pointerId];
+  if(!isoPointerIds().length){
+    isoMode = null;
+    elIsoW.classList.remove("grabbing");
+    save();
+  }
+}
+elIsoW.addEventListener("pointerup", endIsoPointer);
+elIsoW.addEventListener("pointercancel", endIsoPointer);
+elIsoW.addEventListener("contextmenu", function(ev){ ev.preventDefault(); });
+elIsoW.addEventListener("wheel", function(ev){
+  ev.preventDefault();
+  /* deltaMode 1 は行単位。ホイールの振り幅に比例させる。 */
+  var dy = ev.deltaY * (ev.deltaMode === 1 ? 16 : ev.deltaMode === 2 ? 400 : 1);
+  cam.zoom = clampZoom(cam.zoom * Math.exp(-Math.max(-240, Math.min(240, dy)) * 0.0012));
+  applyCam(); save();
+}, {passive:false});
+elIsoW.addEventListener("keydown", function(ev){
+  var step = ev.shiftKey ? 12 : 4, k = ev.key;
+  if(k === "ArrowLeft")       cam.ry -= step;
+  else if(k === "ArrowRight") cam.ry += step;
+  else if(k === "ArrowUp")    cam.rx = Math.min(88, cam.rx + step);
+  else if(k === "ArrowDown")  cam.rx = Math.max(-88, cam.rx - step);
+  else if(k === "+" || k === "=") cam.zoom = clampZoom(cam.zoom * 1.12);
+  else if(k === "-")          cam.zoom = clampZoom(cam.zoom / 1.12);
+  else if(k === "0"){ ev.preventDefault(); resetCam(); return; }
+  else return;
+  ev.preventDefault(); applyCam(); save();
+});
+document.getElementById("isoReset").addEventListener("click", resetCam);
 
 document.addEventListener("keydown", function(e){
   if(e.key === "Escape"){
