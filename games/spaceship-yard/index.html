@@ -1,0 +1,1352 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>カークウッド造船ドック</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Saira+Condensed:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
+<style>
+:root{
+  --void:#0b1014;
+  --deck:#141c22;
+  --plate:#1d272e;
+  --plate-hi:#26333c;
+  --rule:#2b3941;
+  --rule-soft:#212c34;
+  --ink:#dfe7ea;
+  --dim:#8ba0a9;
+  --faint:#5d7079;
+  --amber:#f0a53c;
+  --amber-deep:#b8721f;
+  --data:#6fb6cf;
+  --nominal:#7fd6a6;
+  --alert:#e2604f;
+  --cell:clamp(34px,4vw,60px);
+  --cols:10;
+  --rows:7;
+  --f-disp:"Saira Condensed","Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-body:"Archivo","Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-mono:"IBM Plex Mono","Zen Kaku Gothic New",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--void);
+  color:var(--ink);
+  font-family:var(--f-body);
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+/* ---------- masthead ---------- */
+.masthead{
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+  padding:14px clamp(12px,2.4vw,26px);
+  border-bottom:1px solid var(--rule);
+  background:linear-gradient(180deg,#121b21,#0d151a);
+}
+.mark{display:flex;align-items:baseline;gap:10px}
+.mark b{
+  font-family:var(--f-disp);font-weight:700;font-size:23px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink);
+}
+.mark span{
+  font-family:var(--f-mono);font-size:10.5px;letter-spacing:.16em;color:var(--faint);
+  text-transform:uppercase;
+}
+.mast-spacer{flex:1}
+.purse{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.meter{display:flex;flex-direction:column;gap:1px}
+.meter i{
+  font-style:normal;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.18em;
+  color:var(--faint);text-transform:uppercase;
+}
+.meter b{
+  font-family:var(--f-mono);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;
+  color:var(--amber);
+}
+.meter.small b{font-size:14px;color:var(--ink)}
+
+/* ---------- console layout ---------- */
+.console{
+  display:grid;
+  grid-template-columns:minmax(228px,258px) minmax(0,1fr) minmax(268px,306px);
+  gap:1px;
+  background:var(--rule-soft);
+  min-height:calc(100vh - 58px);
+  align-items:stretch;
+}
+.pane{background:var(--deck);padding:16px clamp(10px,1.4vw,18px);min-width:0}
+.pane-head{
+  display:flex;align-items:center;gap:9px;
+  padding-bottom:9px;margin-bottom:13px;border-bottom:1px solid var(--rule);
+}
+.pane-head h2{
+  margin:0;font-family:var(--f-disp);font-weight:600;font-size:14px;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--dim);
+}
+.pane-head .tag{
+  margin-left:auto;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.12em;
+  color:var(--faint);text-transform:uppercase;
+}
+
+/* ---------- parts bin ---------- */
+.bin{max-height:calc(100vh - 58px);overflow-y:auto;scrollbar-width:thin}
+.bin::-webkit-scrollbar{width:8px}
+.bin::-webkit-scrollbar-thumb{background:var(--rule);border-radius:0}
+.cat{
+  font-family:var(--f-mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--faint);margin:16px 0 7px;display:flex;align-items:center;gap:8px;
+}
+.cat:first-of-type{margin-top:0}
+.cat::after{content:"";flex:1;height:1px;background:var(--rule-soft)}
+.bin-list{display:flex;flex-direction:column;gap:5px}
+.chip{
+  display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;
+  width:100%;text-align:left;padding:7px 9px;
+  background:var(--plate);border:1px solid var(--rule-soft);
+  transition:background .12s,border-color .12s,transform .1s;
+}
+.chip:hover:not(.locked){background:var(--plate-hi);border-color:var(--rule)}
+.chip:active:not(.locked){transform:translateY(1px)}
+.chip.held{border-color:var(--amber);background:#26241c;box-shadow:inset 0 0 0 1px rgba(240,165,60,.28)}
+.chip.locked{opacity:.42;cursor:not-allowed}
+.chip .thumb{width:34px;height:26px;display:block}
+.chip .nm{min-width:0}
+.chip .nm b{
+  display:block;font-family:var(--f-body);font-weight:600;font-size:12.5px;
+  color:var(--ink);letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.chip .nm i{
+  font-style:normal;display:block;font-family:var(--f-mono);font-size:10px;
+  color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.chip .price{
+  font-family:var(--f-mono);font-size:11px;font-variant-numeric:tabular-nums;color:var(--amber);
+}
+.chip.locked .price{color:var(--faint)}
+.chip .lockmsg{grid-column:1/-1;font-family:var(--f-mono);font-size:9.5px;color:var(--faint)}
+
+/* ---------- drydock ---------- */
+.bay-wrap{display:flex;flex-direction:column;gap:12px;min-width:0}
+.bay-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.shipname{
+  flex:1;min-width:130px;background:var(--plate);border:1px solid var(--rule);
+  color:var(--ink);font-family:var(--f-disp);font-size:16px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;padding:6px 10px;
+}
+.shipname:focus{border-color:var(--amber);outline:none}
+.btn{
+  font-family:var(--f-disp);font-weight:600;font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;padding:7px 13px;border:1px solid var(--rule);
+  background:var(--plate);color:var(--dim);transition:.13s;
+}
+.btn:hover{background:var(--plate-hi);color:var(--ink);border-color:var(--faint)}
+.btn.go{
+  width:100%;padding:13px;font-size:15px;letter-spacing:.22em;
+  background:linear-gradient(180deg,#f0a53c,#c47c22);color:#180f02;border-color:#f0a53c;
+}
+.btn.go:hover{background:linear-gradient(180deg,#ffc067,#d68b26);color:#180f02}
+.btn.go[disabled]{
+  background:var(--plate);color:var(--faint);border-color:var(--rule);cursor:not-allowed;
+  box-shadow:none;
+}
+
+.bay-frame{
+  position:relative;padding:16px 18px 14px;background:#0e161b;border:1px solid var(--rule);
+  overflow-x:auto;
+}
+.bay-frame::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(90deg,rgba(111,182,207,.05) 0 1px,transparent 1px 22px),
+    repeating-linear-gradient(0deg,rgba(111,182,207,.05) 0 1px,transparent 1px 22px);
+}
+.bay-axis{
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:var(--f-mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--faint);margin-bottom:9px;position:relative;
+}
+.bay-axis .bow{color:var(--data)}
+
+.grid{
+  position:relative;
+  display:grid;
+  grid-template-columns:repeat(var(--cols),var(--cell));
+  grid-template-rows:repeat(var(--rows),var(--cell));
+  width:calc(var(--cols) * var(--cell));
+  margin:0 auto;
+  background:#0a1115;
+  border:1px solid var(--rule);
+}
+.cell{
+  grid-column:var(--cx);grid-row:var(--cy);
+  border-right:1px solid var(--rule-soft);border-bottom:1px solid var(--rule-soft);
+  background:transparent;padding:0;cursor:default;
+}
+.cell[data-lane="1"]{background:rgba(226,96,79,.05)}
+.grid.placing .cell{cursor:crosshair}
+.grid.placing .cell:hover{background:rgba(240,165,60,.09)}
+
+.ship{
+  position:absolute;inset:0;
+  display:grid;
+  grid-template-columns:repeat(var(--cols),var(--cell));
+  grid-template-rows:repeat(var(--rows),var(--cell));
+  pointer-events:none;
+}
+.part{
+  position:relative;pointer-events:auto;cursor:pointer;padding:0;border:none;background:none;
+  display:block;
+}
+.part svg{display:block;width:100%;height:100%;overflow:visible}
+.part:hover .p-hull{fill:#3b4d58}
+.part:hover::after{
+  content:"";position:absolute;inset:-1px;border:1px solid var(--amber);
+}
+.part.bad::before{
+  content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(226,96,79,.22) 0 6px,transparent 6px 12px);
+}
+.ghost{
+  position:absolute;pointer-events:none;opacity:.62;
+}
+.ghost.no{filter:grayscale(1)}
+.ghost.no::after{
+  content:"";position:absolute;inset:0;background:rgba(226,96,79,.3);
+}
+
+/* part art palette */
+.p-hull{fill:#2e3d46}
+.p-edge{fill:none;stroke:#546873;stroke-width:2}
+.p-deep{fill:#18232a}
+.p-glow{fill:var(--amber)}
+.p-glass{fill:#3d7f96}
+.p-line{fill:none;stroke:#455b66;stroke-width:2}
+.p-mint{fill:#5aa87f}
+
+.hint{
+  font-family:var(--f-mono);font-size:10.5px;color:var(--faint);
+  display:flex;gap:16px;flex-wrap:wrap;margin-top:2px;
+}
+.hint b{color:var(--dim);font-weight:500}
+
+/* ---------- flight check ---------- */
+.check{display:flex;flex-direction:column;gap:14px;max-height:calc(100vh - 58px);overflow-y:auto;scrollbar-width:thin}
+.check::-webkit-scrollbar{width:8px}
+.check::-webkit-scrollbar-thumb{background:var(--rule)}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule-soft);border:1px solid var(--rule-soft)}
+.stat{background:var(--plate);padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.stat i{
+  font-style:normal;font-family:var(--f-mono);font-size:9px;letter-spacing:.15em;
+  color:var(--faint);text-transform:uppercase;
+}
+.stat b{
+  font-family:var(--f-mono);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;
+  color:var(--ink);line-height:1.2;
+}
+.stat b small{font-size:10px;color:var(--faint);font-weight:400;margin-left:3px}
+.stat.ok b{color:var(--nominal)}
+.stat.warn b{color:var(--alert)}
+.stat.data b{color:var(--data)}
+
+.contract{border:1px solid var(--rule);background:var(--plate);padding:12px}
+.contract-nav{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.contract-nav button{
+  width:26px;height:24px;border:1px solid var(--rule);background:var(--deck);color:var(--dim);
+  font-family:var(--f-mono);font-size:13px;line-height:1;
+}
+.contract-nav button:hover{color:var(--amber);border-color:var(--faint)}
+.contract-nav span{
+  flex:1;text-align:center;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.16em;
+  color:var(--faint);text-transform:uppercase;
+}
+.contract h3{
+  margin:0 0 3px;font-family:var(--f-disp);font-size:19px;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ink);text-wrap:balance;
+}
+.contract .brief{margin:0 0 11px;font-size:12.5px;color:var(--dim);line-height:1.55}
+.reqs{display:flex;flex-direction:column;gap:4px;margin-bottom:11px}
+.req{
+  display:flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:11.5px;
+  color:var(--dim);font-variant-numeric:tabular-nums;
+}
+.req .dot{width:7px;height:7px;flex:none;background:var(--alert)}
+.req.met .dot{background:var(--nominal)}
+.req.met{color:var(--ink)}
+.req .val{margin-left:auto;color:var(--faint)}
+.req.met .val{color:var(--nominal)}
+.payline{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding-top:9px;border-top:1px solid var(--rule-soft);
+  font-family:var(--f-mono);font-size:11px;color:var(--faint);letter-spacing:.08em;
+}
+.payline b{color:var(--amber);font-size:15px}
+.done-stamp{
+  display:inline-block;margin-top:8px;font-family:var(--f-disp);font-size:11px;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--nominal);
+  border:1px solid rgba(127,214,166,.4);padding:2px 7px;
+}
+
+.faults{display:flex;flex-direction:column;gap:5px}
+.fault{
+  display:flex;gap:8px;padding:7px 9px;border-left:2px solid var(--alert);
+  background:rgba(226,96,79,.08);font-size:12px;color:#f0b8b0;line-height:1.45;
+}
+.fault.ok{border-left-color:var(--nominal);background:rgba(127,214,166,.07);color:#a9dec4}
+
+.rely{border:1px solid var(--rule);background:var(--plate);padding:10px 12px}
+.rely-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.rely-top i{font-style:normal;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.15em;color:var(--faint);text-transform:uppercase}
+.rely-top b{font-family:var(--f-mono);font-size:19px;font-variant-numeric:tabular-nums;color:var(--amber)}
+.bar{height:9px;background:var(--void);border:1px solid var(--rule-soft);overflow:hidden}
+.bar span{display:block;height:100%;background:linear-gradient(90deg,var(--alert),var(--amber),var(--nominal));transition:width .3s}
+.rely p{margin:7px 0 0;font-size:11.5px;color:var(--faint);line-height:1.5}
+
+/* ---------- launch overlay ---------- */
+.launch{
+  position:fixed;inset:0;z-index:50;display:none;
+  background:#050a0d;overflow:hidden;
+}
+.launch.on{display:block}
+#sky{position:absolute;inset:0;width:100%;height:100%;display:block}
+.stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.flier{
+  position:relative;transform-origin:center center;
+  transition:transform 2.6s cubic-bezier(.42,0,.62,1);
+}
+.flier .ship{position:relative;inset:auto;pointer-events:none}
+.flier .part{pointer-events:none;cursor:default}
+.flame{
+  position:absolute;top:12%;height:76%;right:100%;width:150%;
+  pointer-events:none;
+  background:linear-gradient(270deg,rgba(255,240,200,.95),rgba(240,165,60,.75) 34%,rgba(226,96,79,0) 100%);
+  clip-path:polygon(100% 0,100% 100%,0 62%,0 38%);
+  opacity:0;transform-origin:right center;
+}
+.flying .flame{opacity:1;animation:burn .11s steps(2,end) infinite alternate}
+@keyframes burn{from{transform:scaleX(.82) scaleY(.9)}to{transform:scaleX(1.12) scaleY(1.05)}}
+
+.telem{
+  position:absolute;left:clamp(14px,4vw,54px);bottom:clamp(14px,5vh,46px);
+  width:min(430px,72vw);font-family:var(--f-mono);font-size:12px;line-height:1.75;
+  color:var(--data);text-shadow:0 0 12px rgba(111,182,207,.35);
+}
+.telem div{opacity:0;animation:fadein .3s forwards}
+@keyframes fadein{to{opacity:1}}
+.telem .warnline{color:var(--alert)}
+.telem .okline{color:var(--nominal)}
+
+.verdict{
+  position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  background:rgba(5,10,13,.86);padding:20px;
+}
+.verdict.on{display:flex}
+.card{
+  width:min(500px,94vw);border:1px solid var(--rule);background:var(--deck);
+  padding:clamp(20px,3vw,32px);
+}
+.card .kicker{
+  font-family:var(--f-mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--faint);margin-bottom:8px;
+}
+.card h2{
+  margin:0 0 12px;font-family:var(--f-disp);font-size:clamp(28px,4.6vw,40px);font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;line-height:1;text-wrap:balance;
+}
+.card.win h2{color:var(--nominal)}
+.card.lose h2{color:var(--alert)}
+.card p{margin:0 0 16px;font-size:14px;color:var(--dim);line-height:1.65}
+.ledger{display:flex;flex-direction:column;gap:1px;background:var(--rule-soft);margin-bottom:18px}
+.ledger div{
+  display:flex;justify-content:space-between;background:var(--plate);padding:8px 11px;
+  font-family:var(--f-mono);font-size:12px;font-variant-numeric:tabular-nums;color:var(--dim);
+}
+.ledger div b{color:var(--ink)}
+.ledger div.gain b{color:var(--nominal)}
+.ledger div.loss b{color:var(--alert)}
+.unlocked{
+  border:1px dashed rgba(240,165,60,.42);padding:10px 12px;margin-bottom:18px;
+  font-size:12.5px;color:var(--amber);line-height:1.6;
+}
+.unlocked b{display:block;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(14px);
+  background:var(--plate);border:1px solid var(--amber);color:var(--ink);
+  padding:9px 16px;font-family:var(--f-mono);font-size:12px;
+  opacity:0;pointer-events:none;transition:.25s;z-index:60;
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (max-width:1080px){
+  .console{grid-template-columns:1fr;min-height:0}
+  .bay-wrap{order:1}
+  .bin{order:2;max-height:56vh;overflow-y:auto}
+  .check{order:3;max-height:none;overflow:visible}
+  .bin .pane-head{position:sticky;top:0;background:var(--deck);z-index:2;margin-top:-4px;padding-top:4px}
+  .bin-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:5px}
+  .readout{grid-template-columns:repeat(auto-fit,minmax(118px,1fr))}
+}
+@media (max-width:560px){
+  .mark{flex-direction:column;gap:1px;align-items:flex-start}
+  .mark b{font-size:19px;letter-spacing:.08em}
+  .masthead{gap:12px}
+  .purse{gap:14px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001s!important;transition-duration:.001s!important}
+  .flying .flame{opacity:1;animation:none}
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="mark">
+    <b>カークウッド造船ドック</b>
+    <span>Slip 04 · 軌道整備区</span>
+  </div>
+  <div class="mast-spacer"></div>
+  <div class="purse">
+    <div class="meter small"><i>建造費</i><b id="mBuild">0</b></div>
+    <div class="meter"><i>資金 CR</i><b id="mCred">0</b></div>
+    <button class="btn" id="bReset" type="button">記録を消去</button>
+  </div>
+</header>
+
+<main class="console">
+
+  <!-- PARTS BIN -->
+  <section class="pane bin">
+    <div class="pane-head"><h2>パーツ倉庫</h2><span class="tag" id="binCount"></span></div>
+    <div id="binBody"></div>
+  </section>
+
+  <!-- DRYDOCK -->
+  <section class="pane bay-wrap">
+    <div class="pane-head"><h2>ドック</h2><span class="tag">10 × 7 ハードポイント</span></div>
+
+    <div class="bay-tools">
+      <input class="shipname" id="shipName" value="ホタル改" maxlength="18" aria-label="船名">
+      <button class="btn" id="bUndo" type="button">元に戻す</button>
+      <button class="btn" id="bClear" type="button">全解体</button>
+    </div>
+
+    <div class="bay-frame">
+      <div class="bay-axis">
+        <span>← 排気方向</span>
+        <span class="bow">船首 →</span>
+      </div>
+      <div class="grid" id="grid">
+        <div class="ship" id="ship"></div>
+      </div>
+    </div>
+
+    <p class="hint">
+      <span><b>倉庫でパーツを選ぶ</b> → 空きマスをクリックで設置</span>
+      <span><b>設置済みをクリック</b>で撤去</span>
+      <span><b>Esc</b>で選択解除</span>
+    </p>
+  </section>
+
+  <!-- FLIGHT CHECK -->
+  <section class="pane check">
+    <div class="pane-head"><h2>飛行前点検</h2></div>
+
+    <div class="readout" id="readout"></div>
+
+    <div class="contract">
+      <div class="contract-nav">
+        <button id="cPrev" type="button" aria-label="前の契約">‹</button>
+        <span id="cIdx"></span>
+        <button id="cNext" type="button" aria-label="次の契約">›</button>
+      </div>
+      <h3 id="cName"></h3>
+      <p class="brief" id="cBrief"></p>
+      <div class="reqs" id="cReqs"></div>
+      <div class="payline"><span>報酬</span><b id="cPay"></b></div>
+      <div id="cDone"></div>
+    </div>
+
+    <div class="faults" id="faults"></div>
+
+    <div class="rely">
+      <div class="rely-top"><i>信頼性予測</i><b id="relyVal">--%</b></div>
+      <div class="bar"><span id="relyBar" style="width:0%"></span></div>
+      <p id="relyNote">余裕のある設計ほど事故率が下がります。</p>
+    </div>
+
+    <button class="btn go" id="bLaunch" type="button" disabled>打ち上げ</button>
+  </section>
+</main>
+
+<div class="launch" id="launch">
+  <canvas id="sky"></canvas>
+  <div class="stage"><div class="flier" id="flier"></div></div>
+  <div class="telem" id="telem"></div>
+  <div class="verdict" id="verdict"><div class="card" id="card"></div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   パーツ定義 — 船首は右(+x)、排気は左(-x)
+   ============================================================ */
+var COLS = 10, ROWS = 7;
+
+var CATS = [
+  {id:"command",  label:"司令部"},
+  {id:"structure",label:"構体"},
+  {id:"prop",     label:"推進"},
+  {id:"power",    label:"電力"},
+  {id:"utility",  label:"艤装"}
+];
+
+var PARTS = [
+  {id:"cockpit", cat:"command", name:"Mk1 コックピット", w:2,h:1, mass:3,  cost:40,  crew:1, power:-2, hull:12, blurb:"乗員1・与圧"},
+  {id:"bridge",  cat:"command", name:"司令ブリッジ",     w:2,h:2, mass:8,  cost:220, crew:4, power:-6, hull:30, blurb:"乗員4・与圧", lock:2},
+
+  {id:"truss",   cat:"structure",name:"フレーム桁",      w:1,h:1, mass:1,  cost:8,   hull:4,  blurb:"軽量つなぎ材"},
+  {id:"spine",   cat:"structure",name:"船体スパイン",    w:2,h:1, mass:3,  cost:20,  hull:14, blurb:"主構体"},
+  {id:"plate",   cat:"structure",name:"装甲プレート",    w:1,h:1, mass:4,  cost:25,  hull:22, blurb:"耐圧+22"},
+  {id:"shield",  cat:"structure",name:"アブレーター盾",  w:1,h:2, mass:6,  cost:110, hull:45, blurb:"耐圧+45", lock:1},
+
+  {id:"ion",     cat:"prop",   name:"イオンスラスタ",    w:1,h:1, mass:2,  cost:45,  thrust:45,  power:-8,  heat:6,  isp:3.2, blurb:"推力45・高比推力"},
+  {id:"chem",    cat:"prop",   name:"化学ブースター",    w:2,h:1, mass:6,  cost:70,  thrust:300, power:-2,  heat:16, isp:1.0, blurb:"推力300"},
+  {id:"fusion",  cat:"prop",   name:"核融合トーチ",      w:2,h:2, mass:14, cost:380, thrust:1400,power:-24, heat:55, isp:2.2, blurb:"推力1400", lock:3},
+
+  {id:"solar",   cat:"power",  name:"ソーラーウィング",  w:1,h:2, mass:2,  cost:35,  power:10, hull:3, blurb:"発電+10"},
+  {id:"rtg",     cat:"power",  name:"RTG セル",          w:1,h:1, mass:5,  cost:90,  power:7,  heat:4, blurb:"発電+7・常時", lock:1},
+  {id:"reactor", cat:"power",  name:"核分裂炉",          w:1,h:2, mass:12, cost:240, power:55, heat:30, blurb:"発電+55", lock:3},
+
+  {id:"tank",    cat:"utility",name:"燃料タンク",        w:1,h:2, mass:2,  cost:30,  fuel:40,  hull:6,  blurb:"燃料40"},
+  {id:"tankL",   cat:"utility",name:"長距離タンク",      w:2,h:2, mass:5,  cost:95,  fuel:130, hull:12, blurb:"燃料130", lock:1},
+  {id:"cargo",   cat:"utility",name:"貨物ベイ",          w:2,h:2, mass:4,  cost:80,  cargo:30, hull:10, blurb:"積載30"},
+  {id:"sensor",  cat:"utility",name:"センサーマスト",    w:1,h:1, mass:1,  cost:40,  sensors:1, power:-3, blurb:"観測機器×1"},
+  {id:"rad",     cat:"utility",name:"放熱フィン",        w:1,h:2, mass:2,  cost:45,  cooling:35, power:-2, blurb:"冷却35"}
+];
+
+var PMAP = {};
+PARTS.forEach(function(p){ PMAP[p.id] = p; });
+
+/* ---------- パーツの絵 (viewBox = w*100 × h*100) ---------- */
+var ART = {
+  cockpit:'<path class="p-hull" d="M6 74 L6 26 L112 12 L186 42 L192 50 L186 58 L112 88 Z"/>'+
+          '<path class="p-glass" d="M116 32 L172 48 L116 68 Z"/>'+
+          '<path class="p-line" d="M40 22 L40 78 M72 18 L72 82"/>'+
+          '<circle class="p-glow" cx="24" cy="50" r="5"/>',
+  bridge: '<path class="p-hull" d="M8 178 L8 22 L120 8 L188 76 L192 100 L188 124 L120 192 Z"/>'+
+          '<path class="p-glass" d="M120 40 L176 96 L176 104 L120 160 Z"/>'+
+          '<path class="p-line" d="M46 20 L46 180 M84 14 L84 186"/>'+
+          '<circle class="p-glow" cx="26" cy="100" r="7"/>'+
+          '<rect class="p-deep" x="16" y="86" width="20" height="28"/>',
+  truss:  '<rect class="p-deep" x="10" y="10" width="80" height="80"/>'+
+          '<path class="p-edge" d="M12 12 L88 12 L88 88 L12 88 Z M12 12 L88 88 M88 12 L12 88"/>',
+  spine:  '<rect class="p-hull" x="4" y="26" width="192" height="48"/>'+
+          '<path class="p-line" d="M4 38 L196 38 M4 62 L196 62"/>'+
+          '<rect class="p-deep" x="52" y="42" width="16" height="16"/>'+
+          '<rect class="p-deep" x="132" y="42" width="16" height="16"/>',
+  plate:  '<path class="p-hull" d="M6 18 L18 6 L82 6 L94 18 L94 82 L82 94 L18 94 L6 82 Z"/>'+
+          '<path class="p-line" d="M22 26 L78 26 M22 50 L78 50 M22 74 L78 74"/>',
+  shield: '<path class="p-hull" d="M20 8 L58 8 Q94 100 58 192 L20 192 Z"/>'+
+          '<path class="p-deep" d="M8 8 L22 8 L22 192 L8 192 Z"/>'+
+          '<path class="p-line" d="M34 22 Q64 100 34 178 M46 26 Q74 100 46 174"/>',
+  ion:    '<rect class="p-hull" x="34" y="24" width="56" height="52"/>'+
+          '<path class="p-deep" d="M34 32 L8 14 L8 86 L34 68 Z"/>'+
+          '<circle class="p-glass" cx="24" cy="50" r="9"/>'+
+          '<path class="p-line" d="M46 30 L46 70"/>',
+  chem:   '<rect class="p-hull" x="52" y="16" width="144" height="68"/>'+
+          '<path class="p-deep" d="M52 24 L8 4 L8 96 L52 76 Z"/>'+
+          '<ellipse class="p-glow" cx="18" cy="50" rx="7" ry="26"/>'+
+          '<path class="p-line" d="M78 20 L78 80 M112 20 L112 80 M146 20 L146 80"/>',
+  fusion: '<rect class="p-hull" x="66" y="18" width="128" height="164"/>'+
+          '<path class="p-deep" d="M66 34 L10 6 L10 90 L66 66 Z M66 134 L10 110 L10 194 L66 166 Z"/>'+
+          '<ellipse class="p-glow" cx="22" cy="50" rx="8" ry="24"/>'+
+          '<ellipse class="p-glow" cx="22" cy="150" rx="8" ry="24"/>'+
+          '<path class="p-line" d="M92 26 L92 174 M130 26 L130 174 M166 26 L166 174"/>'+
+          '<circle class="p-glass" cx="150" cy="100" r="16"/>',
+  solar:  '<rect class="p-hull" x="72" y="70" width="22" height="60"/>'+
+          '<rect class="p-glass" x="10" y="14" width="58" height="172" opacity=".55"/>'+
+          '<path class="p-line" d="M10 52 L68 52 M10 90 L68 90 M10 128 L68 128 M10 166 L68 166 M39 14 L39 186"/>',
+  rtg:    '<rect class="p-hull" x="26" y="16" width="48" height="68"/>'+
+          '<path class="p-line" d="M10 24 L26 24 M10 40 L26 40 M10 56 L26 56 M10 72 L26 72 M74 24 L90 24 M74 40 L90 40 M74 56 L90 56 M74 72 L90 72"/>'+
+          '<circle class="p-glow" cx="50" cy="50" r="11"/>',
+  reactor:'<rect class="p-hull" x="14" y="14" width="72" height="172" rx="6"/>'+
+          '<rect class="p-glow" x="14" y="88" width="72" height="10"/>'+
+          '<rect class="p-glow" x="14" y="106" width="72" height="10"/>'+
+          '<circle class="p-glass" cx="50" cy="48" r="16"/>'+
+          '<path class="p-line" d="M22 140 L78 140 M22 160 L78 160"/>',
+  tank:   '<rect class="p-hull" x="12" y="10" width="76" height="180" rx="34"/>'+
+          '<path class="p-line" d="M12 62 L88 62 M12 138 L88 138"/>'+
+          '<rect class="p-deep" x="34" y="90" width="32" height="20"/>',
+  tankL:  '<rect class="p-hull" x="14" y="12" width="172" height="176" rx="46"/>'+
+          '<path class="p-line" d="M14 64 L186 64 M14 136 L186 136 M100 12 L100 188"/>'+
+          '<rect class="p-deep" x="76" y="86" width="48" height="28"/>',
+  cargo:  '<rect class="p-hull" x="8" y="14" width="184" height="172"/>'+
+          '<rect class="p-deep" x="30" y="36" width="140" height="128"/>'+
+          '<path class="p-line" d="M100 36 L100 164 M30 100 L170 100"/>'+
+          '<rect class="p-glow" x="88" y="90" width="24" height="20"/>',
+  sensor: '<rect class="p-hull" x="40" y="52" width="20" height="42"/>'+
+          '<path class="p-glass" d="M50 10 Q92 34 50 58 Q8 34 50 10 Z"/>'+
+          '<circle class="p-glow" cx="50" cy="34" r="5"/>',
+  rad:    '<rect class="p-hull" x="40" y="16" width="20" height="168"/>'+
+          '<path class="p-line" d="M8 34 L92 34 M8 62 L92 62 M8 90 L92 90 M8 118 L92 118 M8 146 L92 146 M8 174 L92 174"/>'+
+          '<rect class="p-mint" x="44" y="80" width="12" height="40" opacity=".7"/>'
+};
+
+function svgFor(id){
+  var p = PMAP[id];
+  return '<svg viewBox="0 0 '+(p.w*100)+' '+(p.h*100)+'" aria-hidden="true">'+ART[id]+'</svg>';
+}
+
+/* ============================================================
+   契約
+   ============================================================ */
+var CONTRACTS = [
+  {
+    id:0, name:"射場試験・第一号",
+    brief:"ドックの上を垂直に飛び、無事に帰ってくること。それだけで信用がつきます。",
+    pay:500,
+    reqs:[{k:"twr",label:"推力比",min:1.1},{k:"crew",label:"乗員",min:1},{k:"dv",label:"Δv",min:18}],
+    unlocks:["rtg","tankL","shield"]
+  },
+  {
+    id:1, name:"月周回サーベイ",
+    brief:"月の裏側を一周し、地形レーダーを引きながら戻る。持続力と観測装備が要ります。",
+    pay:900,
+    reqs:[{k:"twr",label:"推力比",min:1.0},{k:"dv",label:"Δv",min:70},{k:"sensors",label:"観測機器",min:1}],
+    unlocks:["bridge"]
+  },
+  {
+    id:2, name:"小惑星帯・鉱石便",
+    brief:"帯の内縁で積み込み、砕けた岩の中を抜けて帰投。船体の厚みが命綱です。",
+    pay:1500,
+    reqs:[{k:"cargo",label:"積載",min:30},{k:"dv",label:"Δv",min:90},{k:"hull",label:"船体強度",min:80},{k:"twr",label:"推力比",min:0.9}],
+    unlocks:["reactor","fusion"]
+  },
+  {
+    id:3, name:"L4 中継機の設置",
+    brief:"ラグランジュ点に大出力の中継機を据える。発電と放熱の設計勝負になります。",
+    pay:2200,
+    reqs:[{k:"power",label:"余剰電力",min:15},{k:"sensors",label:"観測機器",min:2},{k:"dv",label:"Δv",min:120}],
+    unlocks:[]
+  },
+  {
+    id:4, name:"外縁航路の開設",
+    brief:"有人で外縁まで。片道の余裕がなければ、誰も帰ってきません。",
+    pay:3500,
+    reqs:[{k:"crew",label:"乗員",min:4},{k:"dv",label:"Δv",min:180},{k:"cargo",label:"積載",min:30},
+          {k:"hull",label:"船体強度",min:150},{k:"twr",label:"推力比",min:1.1}],
+    unlocks:[]
+  }
+];
+
+/* ============================================================
+   状態
+   ============================================================ */
+var SAVE_KEY = "kirkwood-drydock-v1";
+var state = {
+  cells:{},        // "x,y" -> uid
+  parts:{},        // uid -> {uid,id,x,y}
+  seq:1,
+  credits:250,
+  done:{},         // contract id -> true
+  contract:0,
+  name:"ホタル改",
+  history:[]
+};
+
+function save(){
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      parts:state.parts, seq:state.seq, credits:state.credits,
+      done:state.done, contract:state.contract, name:state.name
+    }));
+  }catch(e){}
+}
+function load(){
+  try{
+    var raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return;
+    var d = JSON.parse(raw);
+    if(!d || typeof d !== "object") return;
+    state.credits = typeof d.credits === "number" ? d.credits : 250;
+    state.done = d.done || {};
+    state.contract = typeof d.contract === "number" ? d.contract : 0;
+    state.name = d.name || state.name;
+    state.seq = d.seq || 1;
+    state.parts = {};
+    state.cells = {};
+    var ps = d.parts || {};
+    Object.keys(ps).forEach(function(uid){
+      var p = ps[uid];
+      if(p && PMAP[p.id] && fits(p.id, p.x, p.y, null)) place(p.id, p.x, p.y, uid, true);
+    });
+  }catch(e){}
+}
+
+function unlockedIds(){
+  var set = {};
+  PARTS.forEach(function(p){
+    if(!p.lock) set[p.id] = true;
+  });
+  CONTRACTS.forEach(function(c){
+    if(state.done[c.id]) c.unlocks.forEach(function(id){ set[id] = true; });
+  });
+  return set;
+}
+function unlockContractOf(partId){
+  for(var i=0;i<CONTRACTS.length;i++){
+    if(CONTRACTS[i].unlocks.indexOf(partId) >= 0) return CONTRACTS[i];
+  }
+  return null;
+}
+
+/* ============================================================
+   配置ロジック
+   ============================================================ */
+function key(x,y){ return x+","+y; }
+
+function fits(partId, x, y, ignoreUid){
+  var p = PMAP[partId];
+  if(x < 0 || y < 0 || x + p.w > COLS || y + p.h > ROWS) return false;
+  for(var dx=0; dx<p.w; dx++){
+    for(var dy=0; dy<p.h; dy++){
+      var occ = state.cells[key(x+dx, y+dy)];
+      if(occ && occ !== ignoreUid) return false;
+    }
+  }
+  return true;
+}
+
+function place(partId, x, y, forcedUid, silent){
+  var p = PMAP[partId];
+  var uid = forcedUid || ("u" + (state.seq++));
+  state.parts[uid] = {uid:uid, id:partId, x:x, y:y};
+  for(var dx=0; dx<p.w; dx++)
+    for(var dy=0; dy<p.h; dy++)
+      state.cells[key(x+dx, y+dy)] = uid;
+  if(!silent) state.history.push({t:"add", uid:uid});
+  return uid;
+}
+
+function remove(uid, silent){
+  var inst = state.parts[uid];
+  if(!inst) return;
+  var p = PMAP[inst.id];
+  for(var dx=0; dx<p.w; dx++)
+    for(var dy=0; dy<p.h; dy++)
+      delete state.cells[key(inst.x+dx, inst.y+dy)];
+  delete state.parts[uid];
+  if(!silent) state.history.push({t:"del", inst:inst});
+}
+
+function undo(){
+  var h = state.history.pop();
+  if(!h){ toast("これ以上戻せません"); return; }
+  if(h.t === "add") remove(h.uid, true);
+  else place(h.inst.id, h.inst.x, h.inst.y, h.inst.uid, true);
+  refresh();
+}
+
+/* ============================================================
+   船の解析
+   ============================================================ */
+function analyze(){
+  var list = Object.keys(state.parts).map(function(u){ return state.parts[u]; });
+  var s = {
+    count:list.length, dryMass:0, thrust:0, fuel:0, power:0, heat:0, cooling:20,
+    hull:0, crew:0, cargo:0, sensors:0, cost:0, ispNum:0, engines:[],
+    faults:[], loose:[], blocked:[]
+  };
+
+  list.forEach(function(inst){
+    var p = PMAP[inst.id];
+    s.dryMass += p.mass;
+    s.cost    += p.cost;
+    s.thrust  += p.thrust  || 0;
+    s.fuel    += p.fuel    || 0;
+    s.power   += p.power   || 0;
+    s.heat    += p.heat    || 0;
+    s.cooling += p.cooling || 0;
+    s.hull    += p.hull    || 0;
+    s.crew    += p.crew    || 0;
+    s.cargo   += p.cargo   || 0;
+    s.sensors += p.sensors || 0;
+    if(p.thrust){
+      s.ispNum += p.thrust * p.isp;
+      s.engines.push(inst);
+    }
+  });
+
+  s.fuelMass  = s.fuel * 0.06;
+  s.wetMass   = s.dryMass + s.fuelMass;
+  s.isp       = s.thrust > 0 ? s.ispNum / s.thrust : 0;
+  s.twr       = s.wetMass > 0 ? s.thrust / (s.wetMass * 9.81) : 0;
+  s.dv        = (s.dryMass > 0 && s.thrust > 0)
+                ? 220 * s.isp * Math.log(s.wetMass / s.dryMass) : 0;
+  s.heatMargin = s.cooling - s.heat;
+
+  // 司令部から連結をたどる
+  var cmd = null;
+  for(var i=0;i<list.length;i++){
+    if(PMAP[list[i].id].crew){ cmd = list[i]; break; }
+  }
+  if(!cmd){
+    if(s.count) s.faults.push("司令部がありません。コックピットかブリッジを載せてください。");
+  }else{
+    var seen = {}, queue = [cmd.uid];
+    seen[cmd.uid] = true;
+    while(queue.length){
+      var uid = queue.shift();
+      var inst = state.parts[uid], p = PMAP[inst.id];
+      for(var dx=-1; dx<=p.w; dx++){
+        for(var dy=-1; dy<=p.h; dy++){
+          var edge = (dx===-1||dx===p.w) !== (dy===-1||dy===p.h);
+          if(!edge) continue;
+          var n = state.cells[key(inst.x+dx, inst.y+dy)];
+          if(n && !seen[n]){ seen[n] = true; queue.push(n); }
+        }
+      }
+    }
+    list.forEach(function(inst){ if(!seen[inst.uid]) s.loose.push(inst); });
+    if(s.loose.length){
+      s.faults.push(s.loose.length + "個のパーツが本体から浮いています。隣接するように置き直してください。");
+    }
+  }
+
+  // 排気口の前方確認
+  s.engines.forEach(function(inst){
+    var p = PMAP[inst.id];
+    for(var dy=0; dy<p.h; dy++){
+      if(state.cells[key(inst.x-1, inst.y+dy)]){
+        if(s.blocked.indexOf(inst) < 0) s.blocked.push(inst);
+      }
+    }
+  });
+  if(s.blocked.length){
+    s.faults.push(s.blocked.length + "基のエンジンが排気を塞がれています。エンジンの左側は空けてください。");
+  }
+
+  if(s.count && !s.engines.length) s.faults.push("エンジンがありません。");
+  if(s.power < 0) s.faults.push("電力が " + Math.abs(s.power) + " kW 不足しています。");
+  if(s.heatMargin < 0) s.faults.push("排熱が " + Math.abs(s.heatMargin) + " 単位不足。放熱フィンを足してください。");
+  if(s.fuel === 0 && s.engines.length) s.faults.push("燃料タンクがありません。");
+  if(s.cost > state.credits) s.faults.push("資金不足です。あと " + (s.cost - state.credits) + " CR 必要。");
+
+  return s;
+}
+
+function reqValue(s, k){
+  if(k === "twr") return s.twr;
+  if(k === "dv") return s.dv;
+  if(k === "power") return s.power;
+  if(k === "hull") return s.hull;
+  if(k === "crew") return s.crew;
+  if(k === "cargo") return s.cargo;
+  if(k === "sensors") return s.sensors;
+  return 0;
+}
+function fmtReq(k, v){
+  if(k === "twr") return v.toFixed(2);
+  if(k === "dv") return Math.round(v);
+  return Math.round(v);
+}
+
+function reliability(s, c){
+  if(!s.engines.length) return 0;
+  var r = 52;
+  c.reqs.forEach(function(rq){
+    var have = reqValue(s, rq.k);
+    var margin = rq.min > 0 ? (have - rq.min) / rq.min : 0;
+    r += Math.max(-20, Math.min(9, margin * 22));
+  });
+  r += Math.min(10, s.heatMargin / 6);
+  r += Math.min(8, s.power / 5);
+  r += Math.min(8, s.hull / 30);
+  return Math.max(20, Math.min(97, Math.round(r)));
+}
+
+function weakest(s, c){
+  var worst = null, worstM = Infinity;
+  c.reqs.forEach(function(rq){
+    var m = rq.min > 0 ? (reqValue(s, rq.k) - rq.min) / rq.min : 9;
+    if(m < worstM){ worstM = m; worst = rq.k; }
+  });
+  if(s.heatMargin / Math.max(1, s.heat) < worstM){ worstM = s.heatMargin / Math.max(1, s.heat); worst = "heat"; }
+  return worst;
+}
+
+var ANOMALY = {
+  twr:"上昇が鈍く、予定の姿勢を保てないまま推進剤を使い切りました。推力に余裕を。",
+  dv:"帰還噴射の途中で燃料が尽きました。タンクか比推力の高いエンジンを。",
+  power:"母線電圧が落ち、航法計算機が再起動を繰り返しました。発電を厚めに。",
+  hull:"デブリが外板を貫通し、与圧が抜けました。装甲を足してください。",
+  crew:"当直が足りず、長時間の手動制御に耐えられませんでした。",
+  cargo:"荷崩れで重心が狂い、姿勢制御が破綻しました。",
+  sensors:"観測機器が飽和し、目標を捕捉できないまま通過しました。",
+  heat:"炉心周りが過熱し、緊急停止が入りました。放熱面積が足りません。"
+};
+
+/* ============================================================
+   描画
+   ============================================================ */
+var elGrid = document.getElementById("grid");
+var elShip = document.getElementById("ship");
+var held = null;   // 選択中パーツID
+var ghost = null;
+
+function buildGrid(){
+  for(var y=0; y<ROWS; y++){
+    for(var x=0; x<COLS; x++){
+      var c = document.createElement("button");
+      c.type = "button";
+      c.className = "cell";
+      c.style.setProperty("--cx", x+1);
+      c.style.setProperty("--cy", y+1);
+      c.dataset.x = x; c.dataset.y = y;
+      if(x === 0) c.dataset.lane = "1";
+      c.setAttribute("aria-label", "区画 " + (x+1) + "-" + (y+1));
+      c.addEventListener("click", onCell);
+      c.addEventListener("mouseenter", onHover);
+      elGrid.insertBefore(c, elShip);
+    }
+  }
+  elGrid.addEventListener("mouseleave", clearGhost);
+}
+
+function onCell(e){
+  var x = +this.dataset.x, y = +this.dataset.y;
+  if(!held) return;
+  var p = PMAP[held];
+  if(!fits(held, x, y, null)){ toast("そこには入りません"); return; }
+  place(held, x, y);
+  refresh();
+  e.stopPropagation();
+}
+
+function onHover(){
+  if(!held) return;
+  var x = +this.dataset.x, y = +this.dataset.y;
+  drawGhost(x, y);
+}
+
+function drawGhost(x, y){
+  clearGhost();
+  var p = PMAP[held];
+  ghost = document.createElement("div");
+  ghost.className = "ghost" + (fits(held, x, y, null) ? "" : " no");
+  ghost.style.left = "calc(var(--cell) * " + x + ")";
+  ghost.style.top  = "calc(var(--cell) * " + y + ")";
+  ghost.style.width  = "calc(var(--cell) * " + p.w + ")";
+  ghost.style.height = "calc(var(--cell) * " + p.h + ")";
+  ghost.innerHTML = svgFor(held);
+  elGrid.appendChild(ghost);
+}
+function clearGhost(){
+  if(ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
+  ghost = null;
+}
+
+function renderShip(s){
+  elShip.innerHTML = "";
+  Object.keys(state.parts).forEach(function(uid){
+    var inst = state.parts[uid], p = PMAP[inst.id];
+    var el = document.createElement("button");
+    el.type = "button";
+    el.className = "part";
+    if(s && (s.loose.indexOf(inst) >= 0 || s.blocked.indexOf(inst) >= 0)) el.className += " bad";
+    el.style.gridColumn = (inst.x+1) + " / span " + p.w;
+    el.style.gridRow    = (inst.y+1) + " / span " + p.h;
+    el.title = p.name + "（クリックで撤去）";
+    el.setAttribute("aria-label", p.name + " を撤去");
+    el.innerHTML = svgFor(inst.id);
+    if(p.thrust){
+      var f = document.createElement("div");
+      f.className = "flame";
+      el.appendChild(f);
+    }
+    el.addEventListener("click", function(ev){
+      ev.stopPropagation();
+      remove(uid);
+      refresh();
+    });
+    elShip.appendChild(el);
+  });
+}
+
+function renderBin(){
+  var body = document.getElementById("binBody");
+  var un = unlockedIds();
+  var html = "";
+  CATS.forEach(function(cat){
+    html += '<div class="cat">' + cat.label + '</div><div class="bin-list">';
+    PARTS.filter(function(p){ return p.cat === cat.id; }).forEach(function(p){
+      var open = !!un[p.id];
+      var cls = "chip" + (open ? "" : " locked") + (held === p.id ? " held" : "");
+      html += '<button type="button" class="' + cls + '" data-part="' + p.id + '"' +
+              (open ? "" : " disabled") + '>' +
+              '<span class="thumb">' + svgFor(p.id) + '</span>' +
+              '<span class="nm"><b>' + p.name + '</b><i>' + p.w + '×' + p.h + ' · ' + p.mass + 't · ' + p.blurb + '</i></span>' +
+              '<span class="price">' + p.cost + '</span>';
+      if(!open){
+        var c = unlockContractOf(p.id);
+        html += '<span class="lockmsg">「' + (c ? c.name : "?") + '」の達成で解禁</span>';
+      }
+      html += '</button>';
+    });
+    html += '</div>';
+  });
+  body.innerHTML = html;
+  var count = PARTS.filter(function(p){ return un[p.id]; }).length;
+  document.getElementById("binCount").textContent = count + " / " + PARTS.length + " 種";
+
+  Array.prototype.forEach.call(body.querySelectorAll(".chip"), function(btn){
+    btn.addEventListener("click", function(){
+      var id = this.dataset.part;
+      held = (held === id) ? null : id;
+      clearGhost();
+      elGrid.classList.toggle("placing", !!held);
+      renderBin();
+    });
+  });
+}
+
+function renderReadout(s, c){
+  var pw = s.power >= 0 ? "ok" : "warn";
+  var ht = s.heatMargin >= 0 ? "ok" : "warn";
+  var rows = [
+    ["総質量", s.wetMass.toFixed(1) + '<small>t</small>', "data"],
+    ["推力比", s.twr.toFixed(2), s.twr >= 1 ? "ok" : ""],
+    ["Δv", Math.round(s.dv), "data"],
+    ["電力", (s.power >= 0 ? "+" : "") + s.power + '<small>kW</small>', pw],
+    ["排熱余裕", (s.heatMargin >= 0 ? "+" : "") + s.heatMargin, ht],
+    ["船体強度", s.hull, ""],
+    ["乗員 / 積載", s.crew + " / " + s.cargo, ""],
+    ["観測機器", s.sensors, ""]
+  ];
+  document.getElementById("readout").innerHTML = rows.map(function(r){
+    return '<div class="stat ' + r[2] + '"><i>' + r[0] + '</i><b>' + r[1] + '</b></div>';
+  }).join("");
+}
+
+function renderContract(s){
+  var c = CONTRACTS[state.contract];
+  document.getElementById("cIdx").textContent = "契約 " + (state.contract+1) + " / " + CONTRACTS.length;
+  document.getElementById("cName").textContent = c.name;
+  document.getElementById("cBrief").textContent = c.brief;
+  document.getElementById("cReqs").innerHTML = c.reqs.map(function(rq){
+    var have = reqValue(s, rq.k);
+    var met = have >= rq.min;
+    return '<div class="req' + (met ? " met" : "") + '"><span class="dot"></span>' +
+           rq.label + ' ≥ ' + rq.min +
+           '<span class="val">' + fmtReq(rq.k, have) + '</span></div>';
+  }).join("");
+  var repeat = !!state.done[c.id];
+  document.getElementById("cPay").textContent = (repeat ? Math.round(c.pay*0.3) : c.pay) + " CR";
+  document.getElementById("cDone").innerHTML = repeat
+    ? '<span class="done-stamp">達成済 · 再受注は報酬30%</span>' : "";
+  return c;
+}
+
+function renderFaults(s, c){
+  var out = [];
+  s.faults.forEach(function(f){ out.push('<div class="fault">' + f + '</div>'); });
+  var unmet = c.reqs.filter(function(rq){ return reqValue(s, rq.k) < rq.min; });
+  if(!s.count){
+    out = ['<div class="fault ok">倉庫からパーツを選び、ドックに並べてください。まずは司令部・推進・燃料から。</div>'];
+  }else{
+    if(unmet.length){
+      out.push('<div class="fault">契約条件が未達：' +
+        unmet.map(function(r){ return r.label; }).join("・") + '</div>');
+    }
+    if(!out.length){
+      out.push('<div class="fault ok">全項目が基準を満たしています。いつでも出せます。</div>');
+    }
+  }
+  document.getElementById("faults").innerHTML = out.join("");
+  return s.faults.length === 0 && unmet.length === 0 && s.count > 0;
+}
+
+function refresh(){
+  var s = analyze();
+  var c = renderContract(s);
+  renderShip(s);
+  renderReadout(s, c);
+  var ready = renderFaults(s, c);
+
+  var rel = ready ? reliability(s, c) : 0;
+  document.getElementById("relyVal").textContent = ready ? rel + "%" : "--%";
+  document.getElementById("relyBar").style.width = (ready ? rel : 0) + "%";
+  document.getElementById("relyNote").textContent = ready
+    ? "余裕の薄い項目が事故の芽になります。基準ぎりぎりの設計は失敗しやすくなります。"
+    : "点検項目をすべて満たすと予測が出ます。";
+
+  document.getElementById("mCred").textContent = state.credits;
+  document.getElementById("mBuild").textContent = s.cost;
+  document.getElementById("bLaunch").disabled = !ready;
+  document.getElementById("bLaunch").textContent = ready ? "打ち上げ" : "点検未了";
+
+  lastStats = s; lastReady = ready; lastRel = rel;
+  save();
+}
+var lastStats = null, lastReady = false, lastRel = 0;
+
+/* ============================================================
+   打ち上げ
+   ============================================================ */
+var elLaunch = document.getElementById("launch");
+var elFlier  = document.getElementById("flier");
+var elTelem  = document.getElementById("telem");
+var elVerdict= document.getElementById("verdict");
+var sky = document.getElementById("sky");
+var ctx = sky.getContext("2d");
+var stars = [], skyRun = false, skySpeed = 0, rafId = 0;
+
+function initSky(){
+  sky.width  = sky.clientWidth  * (window.devicePixelRatio || 1);
+  sky.height = sky.clientHeight * (window.devicePixelRatio || 1);
+  stars = [];
+  var n = Math.round(sky.width * sky.height / 9000);
+  for(var i=0;i<n;i++){
+    stars.push({
+      x:Math.random()*sky.width,
+      y:Math.random()*sky.height,
+      z:Math.random()*0.85 + 0.15
+    });
+  }
+}
+function drawSky(){
+  if(!skyRun) return;
+  ctx.fillStyle = "#050a0d";
+  ctx.fillRect(0,0,sky.width,sky.height);
+  for(var i=0;i<stars.length;i++){
+    var s = stars[i];
+    var len = skySpeed * s.z * 9;
+    ctx.strokeStyle = "rgba(200,224,232," + (0.22 + s.z*0.6) + ")";
+    ctx.lineWidth = s.z * 1.7;
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y);
+    ctx.lineTo(s.x, s.y + len + 1);
+    ctx.stroke();
+    s.y += skySpeed * s.z * 9;
+    if(s.y > sky.height){ s.y = -20; s.x = Math.random()*sky.width; }
+  }
+  rafId = requestAnimationFrame(drawSky);
+}
+
+function line(text, cls, delay){
+  var d = document.createElement("div");
+  if(cls) d.className = cls;
+  d.textContent = text;
+  d.style.animationDelay = delay + "ms";
+  elTelem.appendChild(d);
+}
+
+var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function launch(){
+  if(!lastReady) return;
+  var s = lastStats;
+  var c = CONTRACTS[state.contract];
+  var rel = lastRel;
+  var success = (Math.random()*100) < rel;
+
+  // 建造費の支払い
+  state.credits -= s.cost;
+
+  elLaunch.classList.add("on");
+  elVerdict.classList.remove("on");
+  elTelem.innerHTML = "";
+
+  // 船を複製して縦向きに
+  var clone = elShip.cloneNode(true);
+  clone.removeAttribute("id");
+  Array.prototype.forEach.call(clone.querySelectorAll(".part"), function(p){
+    p.removeAttribute("title");
+    p.setAttribute("tabindex","-1");
+  });
+  elFlier.innerHTML = "";
+  var scale = Math.min(1.5, (window.innerHeight * 0.52) / (COLS * 44));
+  clone.style.width  = (COLS * 44) + "px";
+  clone.style.height = (ROWS * 44) + "px";
+  clone.style.setProperty("--cell", "44px");
+  elFlier.appendChild(clone);
+  elFlier.classList.add("flying");
+  elFlier.style.transition = "none";
+  elFlier.style.transform = "rotate(-90deg) scale(" + scale + ") translateX(-46vh)";
+
+  initSky();
+  skyRun = true; skySpeed = 0.4;
+  cancelAnimationFrame(rafId);
+  drawSky();
+
+  var t = 0, step = reduceMotion ? 60 : 620;
+  line("▸ " + state.name + " · " + c.name, "", t); t += step;
+  line("固縛解除 — 支持架後退", "", t); t += step;
+  line("主機点火 · 推力 " + Math.round(s.thrust) + " kN", "okline", t); t += step;
+
+  setTimeout(function(){
+    elFlier.style.transition = "transform 3.4s cubic-bezier(.5,0,.55,1)";
+    elFlier.style.transform = "rotate(-90deg) scale(" + scale + ") translateX(52vh)";
+    skySpeed = 3.4;
+  }, reduceMotion ? 30 : 900);
+
+  line("上昇率 良好 · 推力比 " + s.twr.toFixed(2), "", t); t += step;
+  line("Δv 残 " + Math.round(s.dv) + " · 母線 " + (s.power>=0?"+":"") + s.power + " kW", "", t); t += step;
+
+  if(success){
+    line("軌道投入 — 目標へ遷移", "okline", t); t += step;
+    line("任務完了 · 帰投", "okline", t); t += step;
+  }else{
+    var w = weakest(s, c);
+    line("!! 異常検知 — " + (w === "heat" ? "熱系統" : "航行系統"), "warnline", t); t += step;
+    line("任務中断", "warnline", t); t += step;
+  }
+
+  setTimeout(function(){ finish(success, s, c, rel); }, t + (reduceMotion ? 100 : 500));
+}
+
+function finish(success, s, c, rel){
+  var card = document.getElementById("card");
+  var repeat = !!state.done[c.id];
+  var pay = repeat ? Math.round(c.pay * 0.3) : c.pay;
+  var salvage = Math.round(s.cost * 0.7);
+  var newlyOpen = [];
+
+  if(success){
+    state.credits += pay;
+    if(!state.done[c.id]){
+      state.done[c.id] = true;
+      newlyOpen = c.unlocks.slice();
+    }
+  }else{
+    state.credits += salvage;
+  }
+  if(state.credits < 200){
+    state.credits = 200;
+    var granted = true;
+  }
+
+  var html = '<div class="kicker">' + c.name + ' · ' + state.name + '</div>';
+  html += '<h2>' + (success ? "任務完了" : "任務失敗") + '</h2>';
+  if(success){
+    html += '<p>' + (repeat
+      ? "手慣れた航路です。ドックの帳簿に報酬が入りました。"
+      : "設計は持ちこたえました。新しい図面が倉庫に届いています。") + '</p>';
+  }else{
+    var w = weakest(s, c);
+    html += '<p>' + (ANOMALY[w] || "原因不明の異常で任務は中断されました。") + '</p>';
+  }
+
+  html += '<div class="ledger">';
+  html += '<div><span>建造費</span><b>-' + s.cost + ' CR</b></div>';
+  if(success) html += '<div class="gain"><span>報酬</span><b>+' + pay + ' CR</b></div>';
+  else        html += '<div class="loss"><span>回収（建造費の70%）</span><b>+' + salvage + ' CR</b></div>';
+  html += '<div><span>成功率</span><b>' + rel + '%</b></div>';
+  if(granted) html += '<div class="gain"><span>ドック補助金</span><b>残高を200 CRへ</b></div>';
+  html += '<div><span>資金残高</span><b>' + state.credits + ' CR</b></div>';
+  html += '</div>';
+
+  if(newlyOpen.length){
+    html += '<div class="unlocked"><b>新しく解禁されたパーツ</b>' +
+            newlyOpen.map(function(id){ return PMAP[id].name; }).join(" · ") + '</div>';
+  }
+
+  html += '<button class="btn go" id="bBack" type="button">ドックへ戻る</button>';
+  card.className = "card " + (success ? "win" : "lose");
+  card.innerHTML = html;
+  elVerdict.classList.add("on");
+
+  document.getElementById("bBack").addEventListener("click", function(){
+    elLaunch.classList.remove("on");
+    elFlier.classList.remove("flying");
+    skyRun = false;
+    cancelAnimationFrame(rafId);
+    if(success && state.contract < CONTRACTS.length - 1 && newlyOpen.length){
+      state.contract++;
+    }
+    renderBin();
+    refresh();
+  });
+}
+
+/* ============================================================
+   小物
+   ============================================================ */
+var toastEl = document.getElementById("toast"), toastTimer = 0;
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toastEl.classList.remove("on"); }, 1700);
+}
+
+/* ============================================================
+   配線
+   ============================================================ */
+buildGrid();
+load();
+document.getElementById("shipName").value = state.name;
+renderBin();
+refresh();
+
+document.getElementById("shipName").addEventListener("input", function(){
+  state.name = this.value || "無名船";
+  save();
+});
+document.getElementById("bClear").addEventListener("click", function(){
+  if(!Object.keys(state.parts).length) return;
+  Object.keys(state.parts).forEach(function(uid){ remove(uid, true); });
+  state.history = [];
+  refresh();
+  toast("ドックを空にしました");
+});
+document.getElementById("bUndo").addEventListener("click", undo);
+document.getElementById("bLaunch").addEventListener("click", launch);
+document.getElementById("cPrev").addEventListener("click", function(){
+  state.contract = (state.contract - 1 + CONTRACTS.length) % CONTRACTS.length;
+  refresh();
+});
+document.getElementById("cNext").addEventListener("click", function(){
+  state.contract = (state.contract + 1) % CONTRACTS.length;
+  refresh();
+});
+document.getElementById("bReset").addEventListener("click", function(){
+  if(!window.confirm("資金・解禁パーツ・建造中の船をすべて消して最初からやり直しますか？")) return;
+  try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+  Object.keys(state.parts).forEach(function(uid){ remove(uid, true); });
+  state.credits = 250; state.done = {}; state.contract = 0; state.history = [];
+  held = null; elGrid.classList.remove("placing");
+  renderBin(); refresh();
+  toast("記録を消去しました");
+});
+document.addEventListener("keydown", function(e){
+  if(e.key === "Escape"){
+    if(elLaunch.classList.contains("on") && elVerdict.classList.contains("on")){
+      var b = document.getElementById("bBack"); if(b) b.click();
+      return;
+    }
+    held = null; clearGhost(); elGrid.classList.remove("placing"); renderBin();
+  }
+  if((e.ctrlKey || e.metaKey) && e.key === "z"){ e.preventDefault(); undo(); }
+});
+window.addEventListener("resize", function(){
+  if(skyRun) initSky();
+});
+})();
+</script>
+</body>
+</html>
