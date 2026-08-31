@@ -23,6 +23,7 @@
   --nominal:#7fd6a6;
   --alert:#e2604f;
   --sys-command:#3f7086;
+  --sys-habitat:#4a5a8c;
   --sys-structure:#4c5a62;
   --sys-prop:#8d5c2b;
   --sys-power:#3e7f5f;
@@ -223,6 +224,10 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .iso-pivot{transform-style:preserve-3d;position:absolute;top:0;left:0}
 .iso-face{position:absolute;top:0;left:0;transform-origin:0 0;border:1px solid rgba(6,10,13,.5)}
 .iso-empty{font-family:var(--f-mono);font-size:11.5px;color:var(--faint)}
+#isoCv{position:absolute;inset:0;width:100%;height:100%;display:block}
+#flyCv{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1}
+.telem,.verdict{z-index:2}
+.pimg{display:block;width:100%;height:100%;-webkit-user-drag:none;user-select:none;pointer-events:none}
 
 /* ---------- flight check ---------- */
 .check{display:flex;flex-direction:column;gap:14px;max-height:calc(100vh - 58px);overflow-y:auto;scrollbar-width:thin}
@@ -374,6 +379,7 @@ button.fault:hover{background:rgba(226,96,79,.16)}
       <div class="bay-axis"><span id="axL"></span><span class="bow" id="axR"></span></div>
       <div class="grid" id="grid"><div class="ship" id="ship"></div></div>
       <div class="iso-wrap" id="isoWrap" tabindex="0" hidden>
+        <canvas id="isoCv" hidden></canvas>
         <div class="iso-scene" id="isoScene"></div>
         <div class="iso-axes" id="isoAxes"></div>
         <div class="iso-hud"><span id="isoZoom">100%</span><button type="button" id="isoReset">視点リセット</button></div>
@@ -415,6 +421,7 @@ button.fault:hover{background:rgba(226,96,79,.16)}
 
 <div class="launch" id="launch">
   <canvas id="sky"></canvas>
+  <canvas id="flyCv" hidden></canvas>
   <div class="stage"><div class="flier" id="flier"></div></div>
   <div class="telem" id="telem"></div>
   <div class="verdict" id="verdict"><div class="card" id="card"></div></div>
@@ -422,6 +429,7 @@ button.fault:hover{background:rgba(226,96,79,.16)}
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
 <script>
 (function(){
 "use strict";
@@ -433,6 +441,7 @@ var XMAX = 9, YMAX = 5, ZMAX = 5;
 
 var CATS = [
   {id:"command",  label:"司令部"},
+  {id:"habitat",  label:"居住"},
   {id:"structure",label:"構体"},
   {id:"prop",     label:"推進"},
   {id:"power",    label:"電力"},
@@ -443,6 +452,9 @@ var CATS = [
 var PARTS = [
   {id:"cockpit", cat:"command", name:"Mk1 コックピット", w:2,h:1,d:1, mass:3,  cost:40,  crew:1, power:-2, hull:12, blurb:"乗員1・与圧"},
   {id:"bridge",  cat:"command", name:"司令ブリッジ",     w:2,h:2,d:2, mass:8,  cost:220, crew:4, power:-6, hull:30, blurb:"乗員4・与圧", lock:2},
+
+  {id:"habitat", cat:"habitat", name:"与圧居住区",       w:2,h:2,d:2, mass:6,  cost:150, crew:4, power:-5, hull:18, blurb:"乗員4・居住", lock:1},
+  {id:"workbay", cat:"habitat", name:"作業ベイ",          w:2,h:2,d:1, mass:5,  cost:120, crew:2, power:-4, hull:12, cargo:8, blurb:"乗員2・作業区画", lock:2},
 
   {id:"truss",   cat:"structure",name:"フレーム桁",      w:1,h:1,d:1, mass:1,  cost:8,   hull:4,  blurb:"軽量つなぎ材"},
   {id:"spine",   cat:"structure",name:"船体スパイン",    w:2,h:1,d:1, mass:3,  cost:20,  hull:14, blurb:"主構体"},
@@ -475,6 +487,14 @@ var ART = {
           '<path class="p-glass" d="M120 40 L176 96 L176 104 L120 160 Z"/>'+
           '<path class="p-line" d="M46 20 L46 180 M84 14 L84 186"/>'+
           '<circle class="p-glow" cx="26" cy="100" r="7"/><rect class="p-deep" x="16" y="86" width="20" height="28"/>',
+  habitat:'<rect class="p-hull" x="10" y="16" width="180" height="168" rx="30"/>'+
+          '<path class="p-line" d="M10 62 L190 62 M10 138 L190 138"/>'+
+          '<circle class="p-glass" cx="62" cy="100" r="19"/><circle class="p-glass" cx="138" cy="100" r="19"/>'+
+          '<rect class="p-glow" x="88" y="24" width="24" height="10"/>',
+  workbay:'<rect class="p-hull" x="8" y="14" width="184" height="172" rx="10"/>'+
+          '<rect class="p-deep" x="30" y="40" width="82" height="120" rx="6"/>'+
+          '<path class="p-line" d="M132 44 L176 44 M132 76 L176 76 M132 108 L176 108 M132 140 L176 140"/>'+
+          '<rect class="p-glow" x="96" y="92" width="16" height="16"/>',
   truss:  '<rect class="p-deep" x="10" y="10" width="80" height="80"/>'+
           '<path class="p-edge" d="M12 12 L88 12 L88 88 L12 88 Z M12 12 L88 88 M88 12 L12 88"/>',
   spine:  '<rect class="p-hull" x="4" y="26" width="192" height="48"/>'+
@@ -593,11 +613,11 @@ var CONTRACTS = [
   {id:0, name:"射場試験・第一号",
    brief:"ドックの上を垂直に飛び、無事に帰ってくること。それだけで信用がつきます。",
    pay:500, reqs:[{k:"twr",label:"推力比",min:1.1},{k:"crew",label:"乗員",min:1},{k:"dv",label:"Δv",min:18}],
-   unlocks:["rtg","tankL","shield"]},
+   unlocks:["rtg","tankL","shield","habitat"]},
   {id:1, name:"月周回サーベイ",
    brief:"月の裏側を一周し、地形レーダーを引きながら戻る。持続力と観測装備が要ります。",
    pay:900, reqs:[{k:"twr",label:"推力比",min:1.0},{k:"dv",label:"Δv",min:70},{k:"sensors",label:"観測機器",min:1}],
-   unlocks:["bridge"]},
+   unlocks:["bridge","workbay"]},
   {id:2, name:"小惑星帯・鉱石便",
    brief:"帯の内縁で積み込み、砕けた岩の中を抜けて帰投。船体の厚みが命綱です。",
    pay:1500, reqs:[{k:"cargo",label:"積載",min:30},{k:"dv",label:"Δv",min:90},{k:"hull",label:"船体強度",min:80},{k:"twr",label:"推力比",min:0.9}],
@@ -608,7 +628,7 @@ var CONTRACTS = [
    unlocks:[]},
   {id:4, name:"外縁航路の開設",
    brief:"有人で外縁まで。片道の余裕がなければ、誰も帰ってきません。",
-   pay:3500, reqs:[{k:"crew",label:"乗員",min:4},{k:"dv",label:"Δv",min:180},{k:"cargo",label:"積載",min:30},
+   pay:3500, reqs:[{k:"crew",label:"乗員",min:4},{k:"dv",label:"Δv",min:170},{k:"cargo",label:"積載",min:30},
                    {k:"hull",label:"船体強度",min:150},{k:"twr",label:"推力比",min:1.1}],
    unlocks:[]}
 ];
@@ -783,7 +803,7 @@ function undo(){
 function analyze(){
   var list = Object.keys(state.parts).map(function(u){ return state.parts[u]; });
   var s = {count:list.length, dryMass:0, thrust:0, fuel:0, power:0, heat:0, cooling:20,
-           hull:0, crew:0, cargo:0, sensors:0, cost:0, ispNum:0,
+           hull:0, crew:0, berths:0, cargo:0, sensors:0, cost:0, ispNum:0,
            engines:[], faults:[], loose:[], blocked:[]};
 
   list.forEach(function(inst){
@@ -792,9 +812,11 @@ function analyze(){
     s.thrust += p.thrust||0; s.fuel += p.fuel||0; s.power += p.power||0;
     s.heat += p.heat||0; s.cooling += p.cooling||0; s.hull += p.hull||0;
     s.crew += p.crew||0; s.cargo += p.cargo||0; s.sensors += p.sensors||0;
+    if(p.cat === "habitat") s.berths += p.crew||0;
     if(p.thrust){ s.ispNum += p.thrust * p.isp; s.engines.push(inst); }
   });
 
+  s.bunks = (s.crew > 0 ? 1 : 0) + s.berths;   // 操縦席1名分 + 居住区の定員
   s.fuelMass = s.fuel * 0.06;
   s.wetMass  = s.dryMass + s.fuelMass;
   s.isp      = s.thrust > 0 ? s.ispNum / s.thrust : 0;
@@ -837,6 +859,10 @@ function analyze(){
     s.faults.push({msg:s.blocked.length+"基のエンジンが排気を塞がれています。エンジンの船尾側は空けてください。", jump:s.blocked[0]});
   }
 
+  if(s.crew > s.bunks){
+    s.faults.push({msg:"乗員"+s.crew+"名に対し寝台が"+s.bunks+"名分しかありません。" +
+      (s.berths ? "居住区を足してください。" : "操縦席で賄えるのは1名までです。居住区が要ります。")});
+  }
   if(s.count && !s.engines.length) s.faults.push({msg:"エンジンがありません。"});
   if(s.power < 0) s.faults.push({msg:"電力が "+Math.abs(s.power)+" kW 不足しています。"});
   if(s.heatMargin < 0) s.faults.push({msg:"排熱が "+Math.abs(s.heatMargin)+" 単位不足。放熱フィンを足してください。"});
@@ -958,7 +984,7 @@ function addGhost(partId, wx, wy, wz, ok){
   g.style.top    = "calc(var(--cell) * " + r.sy + ")";
   g.style.width  = "calc(var(--cell) * " + r.sw + ")";
   g.style.height = "calc(var(--cell) * " + r.sh + ")";
-  g.innerHTML = state.view === "side" ? profileSVG(partId, r.sw, r.sh) : blockSVG(partId, r.sw, r.sh, state.view);
+  g.innerHTML = partArt(partId, state.view, r.sw, r.sh);
   elGrid.appendChild(g);
   ghosts.push(g);
 }
@@ -1057,7 +1083,7 @@ function renderOrtho(s){
       var dist = cur < r.d0 ? r.d0 - cur : cur - (r.d0 + r.dl - 1);
       el.style.opacity = Math.max(0.09, 0.3 - (dist-1)*0.07);
     }
-    el.innerHTML = state.view === "side" ? profileSVG(inst.id, r.sw, r.sh) : blockSVG(inst.id, r.sw, r.sh, state.view);
+    el.innerHTML = partArt(inst.id, state.view, r.sw, r.sh);
     if(onLayer){
       el.type = "button";
       el.title = p.name + "（ドラッグで移動 / クリックで撤去）";
@@ -1139,9 +1165,13 @@ function clampZoom(z){ return Math.max(0.3, Math.min(4, z)); }
 function normDeg(d){ return ((d % 360) + 360) % 360; }
 
 function applyCam(){
-  elIso.style.transform =
-    "translate("+Math.round(cam.px)+"px,"+Math.round(cam.py)+"px) scale("+cam.zoom.toFixed(3)+") "+
-    "rotateX("+cam.rx.toFixed(1)+"deg) rotateY("+cam.ry.toFixed(1)+"deg)";
+  if(ISO3 && Object.keys(state.parts).length){
+    iso3Apply();
+  }else{
+    elIso.style.transform =
+      "translate("+Math.round(cam.px)+"px,"+Math.round(cam.py)+"px) scale("+cam.zoom.toFixed(3)+") "+
+      "rotateX("+cam.rx.toFixed(1)+"deg) rotateY("+cam.ry.toFixed(1)+"deg)";
+  }
   var z = document.getElementById("isoZoom");
   if(z) z.textContent = Math.round(cam.zoom*100) + "%";
   var a = document.getElementById("isoAxes");
@@ -1153,7 +1183,18 @@ function resetCam(){
 }
 
 function renderIso(){
-  if(!Object.keys(state.parts).length){
+  var empty = !Object.keys(state.parts).length;
+  var cv = document.getElementById("isoCv");
+  if(ISO3){
+    cv.hidden = empty;
+    elIso.style.transform = "none";
+    elIso.innerHTML = empty ? '<span class="iso-empty">パーツを置くと、ここに組み上がりが出ます</span>' : "";
+    if(!empty){ iso3Build(); }
+    applyCam();
+    return;
+  }
+  cv.hidden = true;
+  if(empty){
     elIso.innerHTML = '<span class="iso-empty">パーツを置くと、ここに組み上がりが出ます</span>';
     applyCam();
     return;
@@ -1263,7 +1304,8 @@ function renderReadout(s){
     ["電力", (s.power>=0?"+":"")+s.power+'<small>kW</small>', s.power>=0?"ok":"warn"],
     ["排熱余裕", (s.heatMargin>=0?"+":"")+s.heatMargin, s.heatMargin>=0?"ok":"warn"],
     ["船体強度", s.hull, ""],
-    ["乗員 / 積載", s.crew+" / "+s.cargo, ""],
+    ["乗員 / 寝台", s.crew+" / "+s.bunks, s.bunks >= s.crew ? "" : "warn"],
+    ["積載", s.cargo, ""],
     ["観測機器", s.sensors, ""]
   ];
   document.getElementById("readout").innerHTML = rows.map(function(r){
@@ -1365,6 +1407,775 @@ function refresh(){
 }
 
 /* ============================================================
+   Three.js 層 — 立体ビュー・三面図の絵・打ち上げ演出
+   読み込めない場合は下の CSS 3D / SVG にそのまま落ちる。
+   ============================================================ */
+var THREE_OK = (typeof window.THREE !== "undefined");
+var ART3 = false;        // 3Dから焼いた三面図の絵が使えるか
+var ORTHO_CACHE = {};    // "id|view" -> データURL（初回使用時に焼く）
+var orthoCtx = null, ORTHO_FMT = "image/png", ORTHO_CELL = 96;
+var MAT = null;
+var ISO3 = null;         // {renderer, scene, camera, group}
+var FLY3 = null;         // 打ち上げ用
+
+var SYS_HEX = {
+  command:"#3f7086", habitat:"#4a5a8c", structure:"#4c5a62",
+  prop:"#8d5c2b", power:"#3e7f5f", utility:"#6a5470"
+};
+
+function mixHex(hex, other, t){
+  var a = parseInt(hex.slice(1),16), b = parseInt(other.slice(1),16);
+  var r = Math.round((((a>>16)&255)*(1-t)) + (((b>>16)&255)*t));
+  var g = Math.round((((a>>8)&255)*(1-t)) + (((b>>8)&255)*t));
+  var c = Math.round(((a&255)*(1-t)) + ((b&255)*t));
+  return (r<<16)|(g<<8)|c;
+}
+
+function initMaterials(){
+  MAT = {hull:{}, acc:{}};
+  Object.keys(SYS_HEX).forEach(function(cat){
+    MAT.hull[cat] = new THREE.MeshStandardMaterial({
+      color: mixHex(SYS_HEX[cat], "#4a555c", 0.30), roughness:0.6, metalness:0.5
+    });
+    MAT.acc[cat] = new THREE.MeshStandardMaterial({
+      color: mixHex(SYS_HEX[cat], "#ffffff", 0.16), roughness:0.4, metalness:0.7
+    });
+  });
+  MAT.dark  = new THREE.MeshStandardMaterial({color:0x1a242b, roughness:0.85, metalness:0.3});
+  MAT.steel = new THREE.MeshStandardMaterial({color:0x55606a, roughness:0.55, metalness:0.72});
+  MAT.glass = new THREE.MeshStandardMaterial({color:0x2f6f88, emissive:0x11323f, roughness:0.14, metalness:0.4});
+  MAT.panel = new THREE.MeshStandardMaterial({color:0x1b3f52, emissive:0x0d2733, roughness:0.28, metalness:0.6});
+  MAT.soot  = new THREE.MeshStandardMaterial({color:0x33251a, roughness:0.5, metalness:0.85, side:THREE.DoubleSide});
+  MAT.warn  = new THREE.MeshStandardMaterial({color:0xd8862c, roughness:0.6, metalness:0.2});
+  MAT.amber = new THREE.MeshStandardMaterial({color:0xf0a53c, emissive:0xf0a53c, emissiveIntensity:1.7, roughness:0.4});
+  MAT.hot   = new THREE.MeshStandardMaterial({color:0xff8b3a, emissive:0xff8b3a, emissiveIntensity:1.9, roughness:0.4});
+  MAT.mint  = new THREE.MeshStandardMaterial({color:0x7fd6a6, emissive:0x7fd6a6, emissiveIntensity:0.6, roughness:0.5});
+}
+function H(cat){ return MAT.hull[cat]; }
+function A(cat){ return MAT.acc[cat]; }
+function M(geo, mat){ return new THREE.Mesh(geo, mat); }
+
+/* ---------- 部品モデル ----------
+   局所座標は原点中心、寸法は (w,h,d)。Y は上向き。船首は +X、排気は -X。 */
+var MODEL = {};
+
+/* 司令部: 角張った工業ハードウェア。厚い枠の多面キャノピー。 */
+MODEL.cockpit = function(){
+  var g = new THREE.Group(), m = H("command"), a = A("command");
+  // 胴体: 角張った箱に面取りした腹
+  var hull = new THREE.BoxGeometry(1.5, 0.42, 0.76);
+  hull.translate(-0.14, -0.2, 0);
+  g.add(M(hull, m));
+  var belly = new THREE.CylinderGeometry(0.32, 0.32, 1.48, 4);
+  belly.rotateY(Math.PI/4); belly.rotateZ(-Math.PI/2); belly.scale(1, 0.46, 1.15);
+  belly.translate(-0.14, -0.42, 0);
+  g.add(M(belly, m));
+  // 機首: 短い楔。長い円錐にしない。
+  var nose = new THREE.CylinderGeometry(0.15, 0.34, 0.46, 4);
+  nose.rotateY(Math.PI/4); nose.scale(1, 1, 1.3); nose.rotateZ(-Math.PI/2);
+  nose.translate(0.84, -0.21, 0);
+  g.add(M(nose, m));
+  // キャノピー: 台座・傾斜した前面・上面・側面、太い方立で仕切る
+  var base = new THREE.BoxGeometry(0.94, 0.07, 0.7);
+  base.translate(0.2, 0.02, 0);
+  g.add(M(base, a));
+  var gf = new THREE.BoxGeometry(0.07, 0.33, 0.54);
+  gf.rotateZ(-0.44); gf.translate(0.55, 0.18, 0);
+  g.add(M(gf, MAT.glass));
+  var gt = new THREE.BoxGeometry(0.46, 0.06, 0.54);
+  gt.translate(0.12, 0.31, 0);
+  g.add(M(gt, MAT.glass));
+  [0.31, -0.31].forEach(function(oz){
+    var gs = new THREE.BoxGeometry(0.5, 0.26, 0.06);
+    gs.translate(0.14, 0.17, oz);
+    g.add(M(gs, MAT.glass));
+  });
+  [0.36, -0.04].forEach(function(ox){
+    var mul = new THREE.BoxGeometry(0.06, 0.36, 0.72);
+    mul.rotateZ(-0.24); mul.translate(ox, 0.18, 0);
+    g.add(M(mul, a));
+  });
+  [0.35, -0.35].forEach(function(oz){
+    var eave = new THREE.BoxGeometry(0.94, 0.07, 0.07);
+    eave.translate(0.14, 0.33, oz);
+    g.add(M(eave, a));
+  });
+  var back = new THREE.BoxGeometry(0.08, 0.36, 0.7);
+  back.translate(-0.28, 0.17, 0);
+  g.add(M(back, a));
+  // 外板・警告帯・接続部
+  [0.39, -0.39].forEach(function(oz){
+    var pl = new THREE.BoxGeometry(1.06, 0.28, 0.05);
+    pl.translate(-0.24, -0.2, oz);
+    g.add(M(pl, a));
+  });
+  var stripe = new THREE.BoxGeometry(0.14, 0.29, 0.79);
+  stripe.translate(-0.62, -0.2, 0);
+  g.add(M(stripe, MAT.warn));
+  var collar = new THREE.TorusGeometry(0.32, 0.06, 4, 4);
+  collar.rotateY(Math.PI/2); collar.rotateX(Math.PI/4); collar.translate(-0.92, -0.2, 0);
+  g.add(M(collar, a));
+  [[0.6,0.4],[0.6,-0.4],[-0.62,0.4],[-0.62,-0.4]].forEach(function(o){
+    var rcs = new THREE.CylinderGeometry(0.05, 0.07, 0.09, 8);
+    rcs.rotateX(Math.PI/2); rcs.translate(o[0], -0.08, o[1]);
+    g.add(M(rcs, MAT.dark));
+  });
+  var rail = new THREE.CylinderGeometry(0.022, 0.022, 0.5, 6);
+  rail.rotateZ(Math.PI/2); rail.translate(-0.3, -0.02, 0.4);
+  g.add(M(rail, MAT.steel));
+  var lamp = new THREE.SphereGeometry(0.055, 10, 8);
+  lamp.translate(-0.95, 0.02, 0);
+  g.add(M(lamp, MAT.amber));
+  return g;
+};
+
+MODEL.bridge = function(){
+  var g = new THREE.Group(), m = H("command"), a = A("command");
+  var body = new THREE.BoxGeometry(1.5, 1.4, 1.6);
+  body.translate(-0.2, -0.15, 0);
+  g.add(M(body, m));
+  var brow = new THREE.CylinderGeometry(0.34, 0.66, 0.66, 4);
+  brow.rotateY(Math.PI/4); brow.scale(1, 1, 1.5); brow.rotateZ(-Math.PI/2);
+  brow.translate(0.82, 0.2, 0);
+  g.add(M(brow, m));
+  // 前面の連続窓
+  [0.42, 0, -0.42].forEach(function(oz){
+    var w = new THREE.BoxGeometry(0.06, 0.4, 0.34);
+    w.rotateZ(-0.22); w.translate(0.9, 0.24, oz);
+    g.add(M(w, MAT.glass));
+  });
+  [0.5, -0.5].forEach(function(oz){
+    var pl = new THREE.BoxGeometry(1.2, 1.0, 0.05);
+    pl.translate(-0.25, -0.2, oz*1.62);
+    g.add(M(pl, a));
+  });
+  var deck = new THREE.BoxGeometry(1.7, 0.09, 1.7);
+  deck.translate(-0.1, -0.42, 0);
+  g.add(M(deck, a));
+  var collar = new THREE.TorusGeometry(0.6, 0.08, 4, 4);
+  collar.rotateY(Math.PI/2); collar.rotateX(Math.PI/4); collar.translate(-0.96, -0.15, 0);
+  g.add(M(collar, a));
+  var lamp = new THREE.SphereGeometry(0.08, 10, 8);
+  lamp.translate(-0.99, 0.5, 0);
+  g.add(M(lamp, MAT.amber));
+  return g;
+};
+
+/* 居住: 与圧ドラム。舷窓と手すり、上面に接続ハッチ。 */
+MODEL.habitat = function(){
+  var g = new THREE.Group(), m = H("habitat"), a = A("habitat");
+  var drum = new THREE.CylinderGeometry(0.86, 0.86, 1.34, 20);
+  drum.rotateZ(-Math.PI/2);
+  g.add(M(drum, m));
+  [0.67, -0.67].forEach(function(ox){
+    var capg = new THREE.SphereGeometry(0.86, 20, 12, 0, Math.PI*2, 0, Math.PI/2);
+    capg.rotateZ(ox > 0 ? -Math.PI/2 : Math.PI/2);
+    capg.scale(0.42, 1, 1); capg.translate(ox, 0, 0);
+    g.add(M(capg, m));
+  });
+  [-0.36, 0.36].forEach(function(ox){
+    [0.87, -0.87].forEach(function(oz){
+      var ring = new THREE.CylinderGeometry(0.19, 0.19, 0.07, 14);
+      ring.rotateX(Math.PI/2); ring.translate(ox, 0.1, oz);
+      g.add(M(ring, a));
+      var pane = new THREE.CylinderGeometry(0.13, 0.13, 0.09, 14);
+      pane.rotateX(Math.PI/2); pane.translate(ox, 0.1, oz);
+      g.add(M(pane, MAT.glass));
+    });
+  });
+  [0.5, -0.5].forEach(function(oy){
+    var band = new THREE.TorusGeometry(0.865, 0.045, 8, 24);
+    band.rotateY(Math.PI/2); band.translate(oy, 0, 0);
+    g.add(M(band, a));
+  });
+  var hatch = new THREE.CylinderGeometry(0.3, 0.34, 0.2, 14);
+  hatch.translate(0, 0.92, 0);
+  g.add(M(hatch, a));
+  var hatchIn = new THREE.CylinderGeometry(0.22, 0.22, 0.06, 14);
+  hatchIn.translate(0, 1.0, 0);
+  g.add(M(hatchIn, MAT.dark));
+  // 背の通路板はドラム上面に沿わせる（半径0.86の接線上）
+  var walk = new THREE.BoxGeometry(1.5, 0.06, 0.52);
+  walk.translate(0, 0.85, 0);
+  g.add(M(walk, a));
+  [0.24, -0.24].forEach(function(oz){
+    var rail = new THREE.CylinderGeometry(0.028, 0.028, 1.4, 6);
+    rail.rotateZ(Math.PI/2); rail.translate(0, 0.98, oz);
+    g.add(M(rail, MAT.steel));
+  });
+  [0.62, -0.62].forEach(function(ox){
+    var post = new THREE.CylinderGeometry(0.026, 0.026, 0.16, 6);
+    post.translate(ox, 0.93, 0.24);
+    g.add(M(post, MAT.steel));
+    var post2 = post.clone(); post2.translate(0, 0, -0.48);
+    g.add(M(post2, MAT.steel));
+  });
+  var stripe = new THREE.BoxGeometry(0.16, 0.07, 0.54);
+  stripe.translate(0.55, 0.885, 0);
+  g.add(M(stripe, MAT.warn));
+  return g;
+};
+
+/* 居住: 作業ベイ。大きな扉と手すり。 */
+MODEL.workbay = function(){
+  var g = new THREE.Group(), m = H("habitat"), a = A("habitat");
+  var body = new THREE.BoxGeometry(1.82, 1.78, 0.78);
+  g.add(M(body, m));
+  var door = new THREE.BoxGeometry(0.96, 1.24, 0.06);
+  door.translate(-0.32, -0.1, 0.41);
+  g.add(M(door, MAT.steel));
+  var frame = new THREE.BoxGeometry(1.06, 1.34, 0.05);
+  frame.translate(-0.32, -0.1, 0.385);
+  g.add(M(frame, a));
+  var win = new THREE.BoxGeometry(0.34, 0.24, 0.05);
+  win.translate(-0.32, 0.34, 0.44);
+  g.add(M(win, MAT.glass));
+  [0.5, 0.16, -0.18, -0.52].forEach(function(oy){
+    var rib = new THREE.BoxGeometry(0.5, 0.07, 0.06);
+    rib.translate(0.5, oy, 0.41);
+    g.add(M(rib, a));
+  });
+  [0.42, -0.42].forEach(function(oz){
+    var edge = new THREE.BoxGeometry(1.86, 0.1, 0.06);
+    edge.translate(0, 0.85, oz);
+    g.add(M(edge, a));
+  });
+  var stripe = new THREE.BoxGeometry(1.78, 0.12, 0.04);
+  stripe.translate(0, -0.75, 0.4);
+  g.add(M(stripe, MAT.warn));
+  var lamp = new THREE.SphereGeometry(0.06, 10, 8);
+  lamp.translate(0.72, 0.72, 0.42);
+  g.add(M(lamp, MAT.amber));
+  return g;
+};
+
+MODEL.truss = function(){
+  var g = new THREE.Group(), a = A("structure");
+  [[0.34,0.34],[0.34,-0.34],[-0.34,0.34],[-0.34,-0.34]].forEach(function(o){
+    var r = new THREE.BoxGeometry(0.9, 0.1, 0.1);
+    r.translate(0, o[0], o[1]);
+    g.add(M(r, a));
+  });
+  [0.42, -0.42].forEach(function(ox){
+    var ring = new THREE.TorusGeometry(0.46, 0.06, 4, 4);
+    ring.rotateY(Math.PI/2); ring.rotateX(Math.PI/4); ring.translate(ox, 0, 0);
+    g.add(M(ring, a));
+  });
+  var d1 = new THREE.BoxGeometry(0.9, 0.07, 0.07);
+  d1.rotateZ(0.65); d1.translate(0, 0, 0.34); g.add(M(d1, a));
+  var d2 = new THREE.BoxGeometry(0.9, 0.07, 0.07);
+  d2.rotateZ(-0.65); d2.translate(0, 0, -0.34); g.add(M(d2, a));
+  return g;
+};
+
+MODEL.spine = function(){
+  var g = new THREE.Group(), m = H("structure"), a = A("structure");
+  g.add(M(new THREE.BoxGeometry(1.94, 0.3, 0.3), m));
+  [[-0.3,-0.3],[-0.3,0.3],[0.3,-0.3],[0.3,0.3]].forEach(function(o){
+    var rail = new THREE.BoxGeometry(1.94, 0.085, 0.085);
+    rail.translate(0, o[0], o[1]);
+    g.add(M(rail, a));
+  });
+  [-0.66, 0, 0.66].forEach(function(ox){
+    var ring = new THREE.TorusGeometry(0.42, 0.045, 4, 4);
+    ring.rotateY(Math.PI/2); ring.rotateX(Math.PI/4); ring.translate(ox, 0, 0);
+    g.add(M(ring, a));
+  });
+  [-0.33, 0.33].forEach(function(ox){
+    [0.3, -0.3].forEach(function(oz){
+      var br = new THREE.BoxGeometry(0.62, 0.06, 0.06);
+      br.rotateZ(oz > 0 ? Math.PI/5 : -Math.PI/5); br.translate(ox, 0, oz);
+      g.add(M(br, a));
+    });
+  });
+  return g;
+};
+
+MODEL.plate = function(){
+  var g = new THREE.Group(), m = H("structure"), a = A("structure");
+  var b = new THREE.BoxGeometry(0.86, 0.86, 0.5);
+  b.translate(0, 0, 0.1);
+  g.add(M(b, m));
+  [0.28, 0, -0.28].forEach(function(oy){
+    var rib = new THREE.BoxGeometry(0.9, 0.08, 0.08);
+    rib.translate(0, oy, 0.37);
+    g.add(M(rib, a));
+  });
+  [[0.34,0.34],[0.34,-0.34],[-0.34,0.34],[-0.34,-0.34]].forEach(function(o){
+    var bolt = new THREE.CylinderGeometry(0.05, 0.05, 0.08, 6);
+    bolt.rotateX(Math.PI/2); bolt.translate(o[0], o[1], 0.38);
+    g.add(M(bolt, MAT.steel));
+  });
+  return g;
+};
+
+MODEL.shield = function(){
+  var g = new THREE.Group(), m = H("structure"), a = A("structure");
+  var face = new THREE.SphereGeometry(1.5, 20, 12, 0, Math.PI*2, 0, Math.PI/2);
+  face.scale(0.28, 0.62, 0.32); face.rotateZ(-Math.PI/2); face.translate(0.16, 0, 0);
+  g.add(M(face, m));
+  var back = new THREE.BoxGeometry(0.16, 1.86, 0.86);
+  back.translate(-0.34, 0, 0);
+  g.add(M(back, a));
+  [0.62, 0, -0.62].forEach(function(oy){
+    var rib = new THREE.BoxGeometry(0.1, 0.08, 0.9);
+    rib.translate(-0.22, oy, 0);
+    g.add(M(rib, a));
+  });
+  return g;
+};
+
+MODEL.ion = function(){
+  var g = new THREE.Group(), m = H("prop"), a = A("prop");
+  var body = new THREE.CylinderGeometry(0.3, 0.34, 0.5, 14);
+  body.rotateZ(-Math.PI/2); body.translate(0.2, 0, 0);
+  g.add(M(body, m));
+  var ring = new THREE.CylinderGeometry(0.4, 0.4, 0.12, 14);
+  ring.rotateZ(-Math.PI/2); ring.translate(-0.1, 0, 0);
+  g.add(M(ring, a));
+  var cup = new THREE.CylinderGeometry(0.16, 0.4, 0.34, 14, 1, true);
+  cup.rotateZ(-Math.PI/2); cup.translate(-0.28, 0, 0);
+  g.add(M(cup, MAT.soot));
+  var grid = new THREE.CylinderGeometry(0.3, 0.3, 0.05, 14);
+  grid.rotateZ(-Math.PI/2); grid.translate(-0.32, 0, 0);
+  g.add(M(grid, MAT.glass));
+  return g;
+};
+
+MODEL.chem = function(){
+  var g = new THREE.Group(), m = H("prop"), a = A("prop");
+  var body = new THREE.CylinderGeometry(0.40, 0.44, 1.12, 20);
+  body.rotateZ(-Math.PI/2); body.translate(0.42, 0, 0);
+  g.add(M(body, m));
+  var collar = new THREE.CylinderGeometry(0.47, 0.47, 0.13, 20);
+  collar.rotateZ(-Math.PI/2); collar.translate(-0.16, 0, 0);
+  g.add(M(collar, a));
+  var bell = new THREE.CylinderGeometry(0.19, 0.47, 0.74, 20, 1, true);
+  bell.rotateZ(-Math.PI/2); bell.translate(-0.6, 0, 0);
+  g.add(M(bell, MAT.soot));
+  var throat = new THREE.SphereGeometry(0.16, 12, 10);
+  throat.scale(0.7, 1, 1); throat.translate(-0.3, 0, 0);
+  g.add(M(throat, MAT.hot));
+  [0.28, -0.28].forEach(function(oz){
+    var pipe = new THREE.CylinderGeometry(0.05, 0.05, 1.0, 8);
+    pipe.rotateZ(-Math.PI/2); pipe.translate(0.42, 0.3, oz);
+    g.add(M(pipe, a));
+  });
+  return g;
+};
+
+MODEL.fusion = function(){
+  var g = new THREE.Group(), m = H("prop"), a = A("prop");
+  var body = new THREE.CylinderGeometry(0.82, 0.9, 1.1, 20);
+  body.rotateZ(-Math.PI/2); body.translate(0.42, 0, 0);
+  g.add(M(body, m));
+  var ring = new THREE.TorusGeometry(0.86, 0.1, 10, 24);
+  ring.rotateY(Math.PI/2); ring.translate(0.5, 0, 0);
+  g.add(M(ring, MAT.amber));
+  [0.42, -0.42].forEach(function(oz){
+    var bell = new THREE.CylinderGeometry(0.24, 0.5, 0.86, 18, 1, true);
+    bell.rotateZ(-Math.PI/2); bell.translate(-0.55, 0, oz);
+    g.add(M(bell, MAT.soot));
+    var th = new THREE.SphereGeometry(0.2, 12, 10);
+    th.scale(0.6, 1, 1); th.translate(-0.2, 0, oz);
+    g.add(M(th, MAT.hot));
+  });
+  [0.55, -0.55].forEach(function(oy){
+    var pipe = new THREE.CylinderGeometry(0.07, 0.07, 1.1, 8);
+    pipe.rotateZ(-Math.PI/2); pipe.translate(0.4, oy, 0);
+    g.add(M(pipe, a));
+  });
+  return g;
+};
+
+MODEL.solar = function(){
+  var g = new THREE.Group(), a = A("power");
+  /* 受光面は X-Y 平面。側面図で面が、平面図・正面図で薄い縁が見える。 */
+  g.add(M(new THREE.BoxGeometry(0.84, 1.72, 0.055), MAT.panel));
+  [-0.86, 0.86].forEach(function(oy){
+    var bar = new THREE.BoxGeometry(0.87, 0.055, 0.075);
+    bar.translate(0, oy, 0); g.add(M(bar, a));
+  });
+  [-0.43, 0.43].forEach(function(ox){
+    var bar = new THREE.BoxGeometry(0.05, 1.75, 0.075);
+    bar.translate(ox, 0, 0); g.add(M(bar, a));
+  });
+  [-0.57, 0, 0.57].forEach(function(oy){
+    var rib = new THREE.BoxGeometry(0.86, 0.035, 0.07);
+    rib.translate(0, oy, 0); g.add(M(rib, a));
+  });
+  var strut = new THREE.CylinderGeometry(0.055, 0.055, 0.86, 10);
+  strut.rotateX(Math.PI/2);
+  g.add(M(strut, H("structure")));
+  return g;
+};
+
+MODEL.rtg = function(){
+  var g = new THREE.Group(), m = H("power"), a = A("power");
+  var core = new THREE.CylinderGeometry(0.26, 0.26, 0.68, 14);
+  core.rotateZ(-Math.PI/2);
+  g.add(M(core, m));
+  for(var i=0;i<6;i++){
+    var fin = new THREE.BoxGeometry(0.7, 0.86, 0.04);
+    fin.rotateX(i * Math.PI/6);
+    g.add(M(fin, a));
+  }
+  var cap = new THREE.CylinderGeometry(0.3, 0.3, 0.1, 14);
+  cap.rotateZ(-Math.PI/2); cap.translate(0.38, 0, 0);
+  g.add(M(cap, MAT.amber));
+  return g;
+};
+
+MODEL.reactor = function(){
+  var g = new THREE.Group(), m = H("power"), a = A("power");
+  var vessel = new THREE.CapsuleGeometry(0.4, 1.0, 6, 18);
+  g.add(M(vessel, m));
+  [0.2, -0.1].forEach(function(oy){
+    var band = new THREE.TorusGeometry(0.42, 0.07, 8, 22);
+    band.rotateX(Math.PI/2); band.translate(0, oy, 0);
+    g.add(M(band, MAT.amber));
+  });
+  var shieldRing = new THREE.CylinderGeometry(0.48, 0.48, 0.16, 18);
+  shieldRing.translate(0, 0.62, 0);
+  g.add(M(shieldRing, a));
+  [0.3, -0.3].forEach(function(oz){
+    var pipe = new THREE.CylinderGeometry(0.06, 0.06, 1.4, 8);
+    pipe.translate(0, -0.1, oz);
+    g.add(M(pipe, MAT.steel));
+  });
+  return g;
+};
+
+MODEL.tank = function(){
+  var g = new THREE.Group();
+  g.add(M(new THREE.CapsuleGeometry(0.40, 1.14, 6, 20), H("utility")));
+  [-0.36, 0.36].forEach(function(oy){
+    var band = new THREE.TorusGeometry(0.415, 0.05, 8, 24);
+    band.rotateX(Math.PI/2); band.translate(0, oy, 0);
+    g.add(M(band, A("utility")));
+  });
+  var valve = new THREE.BoxGeometry(0.2, 0.16, 0.2);
+  valve.translate(0, 0.94, 0);
+  g.add(M(valve, MAT.dark));
+  return g;
+};
+
+MODEL.tankL = function(){
+  var g = new THREE.Group(), a = A("utility");
+  var body = new THREE.CapsuleGeometry(0.86, 0.9, 8, 22);
+  body.rotateZ(-Math.PI/2);
+  g.add(M(body, H("utility")));
+  [-0.35, 0.35].forEach(function(ox){
+    var band = new THREE.TorusGeometry(0.87, 0.06, 8, 26);
+    band.rotateY(Math.PI/2); band.translate(ox, 0, 0);
+    g.add(M(band, a));
+  });
+  var valve = new THREE.BoxGeometry(0.34, 0.24, 0.34);
+  valve.translate(0, 0.9, 0);
+  g.add(M(valve, MAT.dark));
+  [0.42, -0.42].forEach(function(oz){
+    var line = new THREE.CylinderGeometry(0.05, 0.05, 1.7, 8);
+    line.rotateZ(Math.PI/2); line.translate(0, 0.6, oz);
+    g.add(M(line, MAT.steel));
+  });
+  return g;
+};
+
+MODEL.cargo = function(){
+  var g = new THREE.Group(), m = H("utility"), a = A("utility");
+  g.add(M(new THREE.BoxGeometry(1.82, 1.8, 1.8), m));
+  [0.91, -0.91].forEach(function(oz){
+    var door = new THREE.BoxGeometry(1.5, 1.5, 0.05);
+    door.translate(0, 0, oz);
+    g.add(M(door, MAT.dark));
+    var seam = new THREE.BoxGeometry(0.07, 1.52, 0.06);
+    seam.translate(0, 0, oz);
+    g.add(M(seam, a));
+  });
+  [0.92, -0.92].forEach(function(oy){
+    var edge = new THREE.BoxGeometry(1.86, 0.1, 1.86);
+    edge.translate(0, oy, 0);
+    g.add(M(edge, a));
+  });
+  var stripe = new THREE.BoxGeometry(1.84, 0.14, 0.06);
+  stripe.translate(0, 0.62, 0.92);
+  g.add(M(stripe, MAT.warn));
+  return g;
+};
+
+MODEL.sensor = function(){
+  var g = new THREE.Group(), m = H("utility"), a = A("utility");
+  var mast = new THREE.CylinderGeometry(0.07, 0.09, 0.5, 10);
+  mast.translate(0, -0.24, 0);
+  g.add(M(mast, m));
+  var dish = new THREE.SphereGeometry(0.4, 18, 10, 0, Math.PI*2, Math.PI*0.62, Math.PI*0.38);
+  dish.translate(0, 0.16, 0);
+  g.add(M(dish, a));
+  var feed = new THREE.CylinderGeometry(0.03, 0.03, 0.3, 6);
+  feed.translate(0, 0.3, 0);
+  g.add(M(feed, MAT.steel));
+  var tip = new THREE.SphereGeometry(0.055, 10, 8);
+  tip.translate(0, 0.44, 0);
+  g.add(M(tip, MAT.amber));
+  return g;
+};
+
+MODEL.rad = function(){
+  var g = new THREE.Group();
+  g.add(M(new THREE.CylinderGeometry(0.085, 0.085, 1.9, 12), H("utility")));
+  for(var i=0;i<7;i++){
+    var fin = new THREE.BoxGeometry(0.78, 0.032, 0.78);
+    fin.translate(0, -0.78 + i*0.26, 0);
+    g.add(M(fin, MAT.steel));
+  }
+  g.add(M(new THREE.CylinderGeometry(0.1, 0.1, 0.5, 12), MAT.mint));
+  return g;
+};
+
+function buildModel(id){ return MODEL[id] ? MODEL[id]() : new THREE.Group(); }
+
+function addLights(sc, k){
+  k = k === undefined ? 1 : k;
+  sc.add(new THREE.HemisphereLight(0x9fc4d4, 0x090f13, 0.85*k));
+  var key = new THREE.DirectionalLight(0xfff2e0, 2.1*k); key.position.set(4, 6, 5); sc.add(key);
+  var rim = new THREE.DirectionalLight(0xf0a53c, 0.85*k); rim.position.set(-5, 1.5, -4); sc.add(rim);
+  var fil = new THREE.DirectionalLight(0x6fb6cf, 0.5*k);  fil.position.set(-2, -4, 3); sc.add(fil);
+}
+
+/* ---------- 三面図の絵: モデルの正射影を焼く ----------
+   画面の対応は toScreen と同じ。側面図は右が船首、平面図は右が船首、
+   正面図は左右反転（右が右舷）。 */
+var ORTHO_VIEWS = {
+  side:  {pos:[0,0,1],  up:[0,1,0],  wKey:"w", hKey:"h"},
+  top:   {pos:[0,1,0],  up:[0,0,-1], wKey:"w", hKey:"d"},
+  front: {pos:[1,0,0],  up:[0,1,0],  wKey:"d", hKey:"h"}
+};
+
+/* 57枚を起動時にまとめて焼くと1秒以上待たせるので、必要になったものだけ焼く。 */
+function orthoInit(){
+  if(orthoCtx) return orthoCtx;
+  var r = new THREE.WebGLRenderer({antialias:true, alpha:true, preserveDrawingBuffer:true});
+  r.setPixelRatio(1);
+  r.outputColorSpace = THREE.SRGBColorSpace;
+  r.toneMapping = THREE.ACESFilmicToneMapping;
+  r.toneMappingExposure = 1.6;
+  var sc = new THREE.Scene();
+  /* 三面で明るさを揃えるため、光源はワールド固定ではなくカメラ基準で置く。 */
+  sc.add(new THREE.HemisphereLight(0xa8ccdb, 0x1b262d, 1.5));
+  var key = new THREE.DirectionalLight(0xfff2e0, 2.2);
+  var rim = new THREE.DirectionalLight(0xf0a53c, 0.7);
+  var fil = new THREE.DirectionalLight(0x6fb6cf, 0.55);
+  sc.add(key); sc.add(rim); sc.add(fil);
+  var cam = new THREE.OrthographicCamera(-1, 1, 1, -1, -20, 20);
+  try{
+    var probe = document.createElement("canvas");
+    if(probe.toDataURL("image/webp").indexOf("data:image/webp") === 0) ORTHO_FMT = "image/webp";
+  }catch(e){}
+  orthoCtx = {r:r, sc:sc, cam:cam, key:key, rim:rim, fil:fil};
+  return orthoCtx;
+}
+
+function spriteFor(id, view){
+  var k = id + "|" + view;
+  if(ORTHO_CACHE[k] !== undefined) return ORTHO_CACHE[k];
+  var url = null;
+  try{
+    var c = orthoInit(), p = PMAP[id], v = ORTHO_VIEWS[view];
+    var cw = p[v.wKey], ch = p[v.hKey];
+    var model = buildModel(id);
+    c.sc.add(model);
+    c.r.setSize(cw*ORTHO_CELL, ch*ORTHO_CELL, false);
+    c.cam.left = -cw/2*1.04; c.cam.right = cw/2*1.04;
+    c.cam.top = ch/2*1.04;   c.cam.bottom = -ch/2*1.04;
+    c.cam.position.set(v.pos[0]*8, v.pos[1]*8, v.pos[2]*8);
+    c.cam.up.set(v.up[0], v.up[1], v.up[2]);
+    c.cam.lookAt(0,0,0);
+    c.cam.updateProjectionMatrix();
+    // カメラの左上前方から当てる
+    var dirv = c.cam.position.clone().normalize();
+    var rightv = new THREE.Vector3().crossVectors(c.cam.up, dirv).normalize();
+    var upv = new THREE.Vector3().crossVectors(dirv, rightv).normalize();
+    c.key.position.copy(dirv).multiplyScalar(6).addScaledVector(upv, 5).addScaledVector(rightv, -3.5);
+    c.rim.position.copy(dirv).multiplyScalar(-4).addScaledVector(upv, 1.5).addScaledVector(rightv, 3);
+    c.fil.position.copy(dirv).multiplyScalar(3).addScaledVector(upv, -4).addScaledVector(rightv, 2);
+    c.r.render(c.sc, c.cam);
+    url = c.r.domElement.toDataURL(ORTHO_FMT);
+    c.sc.remove(model);
+  }catch(e){ url = null; }
+  ORTHO_CACHE[k] = url;
+  return url;
+}
+
+/* ---------- 立体ビュー ---------- */
+function iso3Init(){
+  var cv = document.getElementById("isoCv");
+  var ren = new THREE.WebGLRenderer({canvas:cv, antialias:true, alpha:true});
+  ren.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  ren.outputColorSpace = THREE.SRGBColorSpace;
+  ren.toneMapping = THREE.ACESFilmicToneMapping;
+  ren.toneMappingExposure = 1.18;
+  var sc = new THREE.Scene();
+  addLights(sc);
+  var grp = new THREE.Group();
+  sc.add(grp);
+  var camera = new THREE.PerspectiveCamera(16, 1, 0.5, 600);
+  ISO3 = {ren:ren, sc:sc, cam:camera, grp:grp, key:"", span:XMAX};
+}
+
+function shipKey(){
+  return Object.keys(state.parts).sort().map(function(u){
+    var i = state.parts[u];
+    return i.id+":"+i.x+","+i.y+","+i.z;
+  }).join("|");
+}
+
+/* 船の外接箱。構図を船に合わせるため。 */
+function shipBox(){
+  var b = {x0:1e9,y0:1e9,z0:1e9,x1:-1e9,y1:-1e9,z1:-1e9}, n = 0;
+  Object.keys(state.parts).forEach(function(uid){
+    var i = state.parts[uid], p = PMAP[i.id]; n++;
+    b.x0 = Math.min(b.x0, i.x); b.x1 = Math.max(b.x1, i.x+p.w);
+    b.y0 = Math.min(b.y0, i.y); b.y1 = Math.max(b.y1, i.y+p.h);
+    b.z0 = Math.min(b.z0, i.z); b.z1 = Math.max(b.z1, i.z+p.d);
+  });
+  if(!n) return {cx:XMAX/2, cy:YMAX/2, cz:ZMAX/2, span:XMAX};
+  return {cx:(b.x0+b.x1)/2, cy:(b.y0+b.y1)/2, cz:(b.z0+b.z1)/2,
+          span:Math.max(3, b.x1-b.x0, b.y1-b.y0, b.z1-b.z0)};
+}
+
+function iso3Build(){
+  var k = shipKey();
+  if(k === ISO3.key) return;
+  ISO3.key = k;
+  while(ISO3.grp.children.length) ISO3.grp.remove(ISO3.grp.children[0]);
+  var bb = shipBox();
+  ISO3.span = bb.span;
+  Object.keys(state.parts).forEach(function(uid){
+    var inst = state.parts[uid], p = PMAP[inst.id];
+    var g = buildModel(inst.id);
+    g.position.set(inst.x + p.w/2 - bb.cx,
+                   -(inst.y + p.h/2 - bb.cy),
+                   inst.z + p.d/2 - bb.cz);
+    ISO3.grp.add(g);
+  });
+}
+
+function iso3Apply(){
+  var wrap = document.getElementById("isoWrap");
+  var w = wrap.clientWidth, h = wrap.clientHeight;
+  if(!w || !h) return;
+  var pr = ISO3.ren.getPixelRatio();
+  if(ISO3.ren.domElement.width !== Math.floor(w*pr) || ISO3.ren.domElement.height !== Math.floor(h*pr)){
+    ISO3.ren.setSize(w, h, false);
+    ISO3.cam.aspect = w/h;
+    ISO3.cam.updateProjectionMatrix();
+  }
+  var rx = cam.rx*Math.PI/180, ry = cam.ry*Math.PI/180;
+  var half = Math.tan(16*Math.PI/360);
+  var dist = ((ISO3.span || XMAX) * 0.82 / half) / cam.zoom;
+  var dir = new THREE.Vector3(-Math.cos(rx)*Math.sin(ry), -Math.sin(rx), Math.cos(rx)*Math.cos(ry));
+  var target = new THREE.Vector3(0,0,0);
+  var right = new THREE.Vector3().crossVectors(ISO3.cam.up, dir).normalize();
+  var up = new THREE.Vector3().crossVectors(dir, right).normalize();
+  var wpp = (2 * dist * half) / h;
+  target.addScaledVector(right, -cam.px * wpp).addScaledVector(up, cam.py * wpp);
+  ISO3.cam.position.copy(target).addScaledVector(dir, dist);
+  ISO3.cam.lookAt(target);
+  ISO3.ren.render(ISO3.sc, ISO3.cam);
+}
+
+/* ---------- 打ち上げ ---------- */
+function fly3Init(){
+  var cv = document.getElementById("flyCv");
+  var ren = new THREE.WebGLRenderer({canvas:cv, antialias:true, alpha:true});
+  ren.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  ren.outputColorSpace = THREE.SRGBColorSpace;
+  ren.toneMapping = THREE.ACESFilmicToneMapping;
+  ren.toneMappingExposure = 1.22;
+  var sc = new THREE.Scene();
+  addLights(sc, 1.1);
+  var grp = new THREE.Group();
+  grp.rotation.z = Math.PI/2;          // 船首を上へ
+  sc.add(grp);
+  var camera = new THREE.PerspectiveCamera(30, 1, 0.5, 600);
+  FLY3 = {ren:ren, sc:sc, cam:camera, grp:grp, plumes:[], t:0};
+}
+
+function fly3Build(){
+  while(FLY3.grp.children.length) FLY3.grp.remove(FLY3.grp.children[0]);
+  FLY3.plumes = [];
+  var bb = shipBox();
+  FLY3.span = bb.span;
+  Object.keys(state.parts).forEach(function(uid){
+    var inst = state.parts[uid], p = PMAP[inst.id];
+    var g = buildModel(inst.id);
+    g.position.set(inst.x + p.w/2 - bb.cx,
+                   -(inst.y + p.h/2 - bb.cy),
+                   inst.z + p.d/2 - bb.cz);
+    FLY3.grp.add(g);
+    if(p.thrust){
+      var len = 1.4 + Math.min(4.5, p.thrust/320);
+      var pl = new THREE.CylinderGeometry(0.05, Math.min(0.55, 0.16 + p.thrust/3200), len, 14, 1, true);
+      pl.rotateZ(Math.PI/2);
+      pl.translate(-len/2, 0, 0);
+      var mesh = new THREE.Mesh(pl, new THREE.MeshBasicMaterial({
+        color:0xffc266, transparent:true, opacity:0.62,
+        blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide
+      }));
+      mesh.position.copy(g.position);
+      mesh.position.x -= p.w/2;
+      FLY3.grp.add(mesh);
+      FLY3.plumes.push(mesh);
+    }
+  });
+}
+
+function fly3Frame(dt, climb){
+  var wrap = document.getElementById("launch");
+  var w = wrap.clientWidth, h = wrap.clientHeight;
+  if(!w || !h) return;
+  var pr = FLY3.ren.getPixelRatio();
+  if(FLY3.ren.domElement.width !== Math.floor(w*pr) || FLY3.ren.domElement.height !== Math.floor(h*pr)){
+    FLY3.ren.setSize(w, h, false);
+    FLY3.cam.aspect = w/h;
+    FLY3.cam.updateProjectionMatrix();
+  }
+  FLY3.t += dt;
+  FLY3.grp.position.y = climb;
+  FLY3.grp.rotation.y = 0.35 + FLY3.t * 0.06;
+  FLY3.plumes.forEach(function(pl, i){
+    var f = 0.82 + 0.3 * Math.abs(Math.sin(FLY3.t*22 + i));
+    pl.scale.set(f, 1, f);
+    pl.material.opacity = 0.5 + 0.22 * Math.abs(Math.sin(FLY3.t*17 + i*1.7));
+  });
+  var d = (FLY3.span || XMAX) * 2.4;
+  FLY3.cam.position.set(d*0.42, 0.6, d);
+  FLY3.cam.lookAt(0, 0.2, 0);
+  FLY3.ren.render(FLY3.sc, FLY3.cam);
+}
+
+function initThree3D(){
+  if(!THREE_OK) return;
+  try{
+    initMaterials();
+    iso3Init();
+    ART3 = true;
+  }catch(e){
+    THREE_OK = false; ART3 = false; ISO3 = null; FLY3 = null;
+    if(window.console) console.warn("3D初期化に失敗、平面描画に切り替えます:", e);
+  }
+}
+
+/* 三面図の絵。スプライトがなければ従来のSVGに落ちる。 */
+function partArt(id, view, sw, sh){
+  if(ART3){
+    var url = spriteFor(id, view);
+    if(url) return '<img class="pimg" src="' + url + '" alt="">';
+  }
+  return view === "side" ? profileSVG(id, sw, sh) : blockSVG(id, sw, sh, view);
+}
+
+/* ============================================================
    打ち上げ
    ============================================================ */
 var elLaunch = document.getElementById("launch");
@@ -1373,6 +2184,7 @@ var elTelem  = document.getElementById("telem");
 var elVerdict= document.getElementById("verdict");
 var sky = document.getElementById("sky"), ctx = sky.getContext("2d");
 var stars = [], skyRun = false, skySpeed = 0, rafId = 0;
+var flyClimb = 0, flyTargetClimb = 0, flyLast = 0;
 var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function initSky(){
@@ -1384,6 +2196,13 @@ function initSky(){
 }
 function drawSky(){
   if(!skyRun) return;
+  if(FLY3){
+    var now = performance.now();
+    var dtf = flyLast ? Math.min(0.05, (now - flyLast)/1000) : 0.016;
+    flyLast = now;
+    flyClimb += (flyTargetClimb - flyClimb) * Math.min(1, dtf * 0.9);
+    fly3Frame(dtf, flyClimb);
+  }
   ctx.fillStyle = "#050a0d";
   ctx.fillRect(0,0,sky.width,sky.height);
   for(var i=0;i<stars.length;i++){
@@ -1414,12 +2233,21 @@ function launch(){
   elVerdict.classList.remove("on");
   elTelem.innerHTML = "";
 
-  var C = Math.max(18, Math.min(44, Math.round(window.innerHeight * 0.42 / XMAX)));
-  buildIso(elFlier, C, true);
-  elFlier.classList.add("flying");
   var pose = "rotateX(-12deg) rotateY(-26deg) rotateZ(-90deg)";
-  elFlier.style.transition = "none";
-  elFlier.style.transform = "translateY(48vh) " + pose;
+  if(THREE_OK && !FLY3){ try{ fly3Init(); }catch(e){ FLY3 = null; } }
+  if(FLY3){
+    document.getElementById("flyCv").hidden = false;
+    elFlier.innerHTML = "";
+    fly3Build();
+    flyClimb = -(FLY3.span || XMAX) * 1.6;
+    flyTargetClimb = flyClimb;
+  }else{
+    var C = Math.max(18, Math.min(44, Math.round(window.innerHeight * 0.42 / XMAX)));
+    buildIso(elFlier, C, true);
+    elFlier.classList.add("flying");
+    elFlier.style.transition = "none";
+    elFlier.style.transform = "translateY(48vh) " + pose;
+  }
 
   initSky();
   skyRun = true; skySpeed = 0.4;
@@ -1432,8 +2260,12 @@ function launch(){
   line("主機点火 · 推力 "+Math.round(s.thrust)+" kN", "okline", t); t += step;
 
   setTimeout(function(){
-    elFlier.style.transition = "transform 3.4s cubic-bezier(.5,0,.55,1)";
-    elFlier.style.transform = "translateY(-54vh) " + pose;
+    if(FLY3){
+      flyTargetClimb = (FLY3.span || XMAX) * 1.6;
+    }else{
+      elFlier.style.transition = "transform 3.4s cubic-bezier(.5,0,.55,1)";
+      elFlier.style.transform = "translateY(-54vh) " + pose;
+    }
     skySpeed = 3.4;
   }, reduceMotion ? 30 : 900);
 
@@ -1491,7 +2323,8 @@ function finish(success, s, c, rel){
   document.getElementById("bBack").addEventListener("click", function(){
     elLaunch.classList.remove("on");
     elFlier.classList.remove("flying");
-    skyRun = false;
+    skyRun = false; flyLast = 0;
+    document.getElementById("flyCv").hidden = true;
     cancelAnimationFrame(rafId);
     if(success && state.contract < CONTRACTS.length-1 && newlyOpen.length) state.contract++;
     renderBin();
@@ -1522,6 +2355,7 @@ function stepDepth(delta){
    配線
    ============================================================ */
 load();
+initThree3D();
 renderTabs();
 document.getElementById("shipName").value = state.name;
 renderBin();
