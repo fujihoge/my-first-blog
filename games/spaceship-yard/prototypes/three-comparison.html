@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ドック部品の立体化検討</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Saira+Condensed:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
+<style>
+:root{
+  --void:#0b1014; --deck:#141c22; --plate:#1d272e; --plate-hi:#26333c;
+  --rule:#2b3941; --rule-soft:#212c34;
+  --ink:#dfe7ea; --dim:#8ba0a9; --faint:#5d7079;
+  --amber:#f0a53c; --data:#6fb6cf; --nominal:#7fd6a6; --alert:#e2604f;
+  --sys-command:#3f7086; --sys-structure:#4c5a62; --sys-prop:#8d5c2b;
+  --sys-power:#3e7f5f; --sys-utility:#6a5470;
+  --f-disp:"Saira Condensed","Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-body:"Archivo","Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-mono:"IBM Plex Mono","Zen Kaku Gothic New",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;padding:0}
+body{background:var(--void);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+.wrap{max-width:1180px;margin:0 auto;padding:clamp(20px,3vw,40px) clamp(14px,3vw,32px) 72px}
+
+header.top{border-bottom:1px solid var(--rule);padding-bottom:20px;margin-bottom:26px}
+.kicker{font-family:var(--f-mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+h1{
+  margin:0 0 10px;font-family:var(--f-disp);font-weight:700;
+  font-size:clamp(26px,4.4vw,42px);letter-spacing:.06em;line-height:1.05;text-wrap:balance;
+}
+.lede{margin:0;max-width:62ch;color:var(--dim);font-size:15px}
+.lede b{color:var(--ink);font-weight:600}
+
+h2{
+  margin:0 0 4px;font-family:var(--f-disp);font-weight:600;font-size:15px;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--dim);
+}
+section{margin-top:38px}
+.sec-note{margin:0 0 16px;color:var(--faint);font-size:13px;max-width:64ch}
+
+/* ---- comparison ---- */
+.bar{
+  display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+  padding:9px 12px;border:1px solid var(--rule);background:var(--plate);margin-bottom:1px;
+}
+.bar .lab{font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase}
+.bar .sp{flex:1}
+.btn{
+  font-family:var(--f-disp);font-weight:600;font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;
+  padding:6px 12px;border:1px solid var(--rule);background:var(--deck);color:var(--dim);transition:.13s;
+}
+.btn:hover{background:var(--plate-hi);color:var(--ink);border-color:var(--faint)}
+.btn.on{border-color:var(--amber);color:var(--amber);background:#231e14}
+.readout{font-family:var(--f-mono);font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule-soft);border:1px solid var(--rule)}
+.pane{position:relative;background:#0d151a;min-height:clamp(280px,42vh,420px);overflow:hidden;touch-action:none;cursor:grab}
+.pane.grabbing{cursor:grabbing}
+.pane .tagline{
+  position:absolute;left:11px;top:10px;z-index:3;font-family:var(--f-mono);font-size:10px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--faint);pointer-events:none;
+}
+.pane .tagline b{display:block;font-family:var(--f-disp);font-size:14px;letter-spacing:.1em;color:var(--dim);margin-top:2px}
+.pane.three .tagline b{color:var(--amber)}
+.pane canvas{display:block;width:100%;height:100%}
+
+/* CSS-3D pane (current renderer) */
+.css-stage{position:absolute;inset:0;perspective:1500px;display:flex;align-items:center;justify-content:center}
+.css-scene{position:relative;transform-style:preserve-3d}
+.css-pivot{position:absolute;top:0;left:0;transform-style:preserve-3d}
+.css-face{position:absolute;top:0;left:0;transform-origin:0 0;border:1px solid rgba(6,10,13,.5)}
+
+.notice{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;
+  text-align:center;font-family:var(--f-mono);font-size:12px;color:var(--alert);line-height:1.8;z-index:4;
+}
+
+/* ---- gallery ---- */
+.gallery{border:1px solid var(--rule);background:#0d151a;position:relative}
+#gal{display:block;width:100%;height:clamp(200px,26vh,280px)}
+.gal-labels{display:grid;gap:1px;background:var(--rule-soft);border:1px solid var(--rule);border-top:none}
+.gal-labels div{background:var(--plate);padding:8px 10px;min-width:0}
+.gal-labels b{display:block;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gal-labels i{
+  font-style:normal;display:block;font-family:var(--f-mono);font-size:9.5px;color:var(--faint);
+  margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.gal-labels span{display:block;width:20px;height:3px;background:var(--sys);margin-bottom:6px}
+
+/* ---- breakdown table ---- */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{
+  text-align:left;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--faint);font-weight:400;padding:0 12px 8px;border-bottom:1px solid var(--rule);
+}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+.tbl tr td:first-child{white-space:nowrap;font-weight:600}
+.tbl code{font-family:var(--f-mono);font-size:11.5px;color:var(--data);background:rgba(111,182,207,.08);padding:1px 5px}
+.tbl td:last-child{color:var(--dim)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--rule);background:var(--plate);padding:14px 2px 2px}
+
+/* ---- notes ---- */
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:1px;background:var(--rule-soft);border:1px solid var(--rule)}
+.note{background:var(--plate);padding:14px 16px}
+.note h3{
+  margin:0 0 7px;font-family:var(--f-disp);font-size:13px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--amber);
+}
+.note.warn h3{color:var(--alert)}
+.note p{margin:0;font-size:12.5px;color:var(--dim);line-height:1.7}
+.note p + p{margin-top:8px}
+.note code{font-family:var(--f-mono);font-size:11px;color:var(--data)}
+
+@media (max-width:760px){
+  .pair{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001s!important;transition-duration:.001s!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="kicker">Kirkwood Drydock · 描画方式の検討</div>
+  <h1>ドック部品の立体化検討</h1>
+  <p class="lede">立体図をいまの <b>CSS 3D（板を6枚並べた箱）</b> から <b>Three.js</b> に載せ替えると、どこまで変わるのか。同じ船・同じカメラで左右に並べました。<b>どちらのパネルをドラッグしても両方が同じ角度で回ります。</b></p>
+</header>
+
+<section>
+  <h2>並べて比較</h2>
+  <p class="sec-note">部品7個の小型船。左は現行の実装そのまま、右は同じ配置データから手続き的に組んだモデル。ドラッグで回転、Shift+ドラッグで平行移動、ホイールで拡大縮小。</p>
+  <div class="bar">
+    <span class="lab">視点</span>
+    <span class="readout" id="camRead"></span>
+    <span class="sp"></span>
+    <button class="btn" id="bSpin" type="button">自動回転</button>
+    <button class="btn" id="bReset" type="button">視点リセット</button>
+  </div>
+  <div class="pair">
+    <div class="pane css" id="paneCss">
+      <div class="tagline">現在の実装<b>CSS 3D</b></div>
+      <div class="css-stage"><div class="css-scene" id="cssScene"></div></div>
+    </div>
+    <div class="pane three" id="paneThree">
+      <div class="tagline">検討中<b>Three.js 0.160.0</b></div>
+      <canvas id="cv"></canvas>
+      <div class="notice" id="threeNotice" hidden></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>部品単体</h2>
+  <p class="sec-note">外部のモデルファイルは使わず、すべてコード内でプリミティブから組んでいます。系統色は三面図と共通のまま、素材を金属寄りに寄せて、色でも形でも見分けられるようにしています。</p>
+  <div class="gallery"><canvas id="gal"></canvas><div class="notice" id="galNotice" hidden></div></div>
+  <div class="gal-labels" id="galLabels"></div>
+</section>
+
+<section>
+  <h2>何でできているか</h2>
+  <p class="sec-note">宇宙船の部品は回転体と基本立体の塊なので、手続き生成と相性がいいところです。1部品あたりおおむね15〜30行。</p>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>部品</th><th>使っているジオメトリ</th><th>ねらい</th></tr></thead>
+      <tbody id="tblBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>判断材料</h2>
+  <div class="notes">
+    <div class="note">
+      <h3>ゲーム側は無傷</h3>
+      <p>立体図は確認専用でクリック判定を持たないので、描画を差し替えても三面図・当たり判定・契約・打ち上げの計算には一切触りません。今回で3回目の「描画層だけの載せ替え」です。</p>
+      <p>打ち上げ演出だけは同じ組み立て処理を共有しているので、そこは一緒に移ります。</p>
+    </div>
+    <div class="note">
+      <h3>モデルファイルは使えない</h3>
+      <p>Artifactは外部からのアセット取得（fetch/XHR含む）を止めるため、<code>.glb</code> を CDN から読む経路がありません。data URIで埋め込むことは可能ですが容量を圧迫します。</p>
+      <p>結果として手続き生成が最善手になりますが、宇宙船の部品には元々それが向いています。</p>
+    </div>
+    <div class="note warn">
+      <h3>バージョンは 0.160.0 で固定</h3>
+      <p>Three.js の UMD ビルド（<code>three.min.js</code>）は <b>0.160.0 が最後</b>で、0.161.0 以降はESM専用です。npmのtarballを開いて確認しました。Artifactが推奨する <code>&lt;script src&gt;</code>＋グローバル方式で行くならここで固定します。</p>
+      <p>必要な機能（プリミティブ・標準マテリアル・ライト）は全て揃っているので、実用上の不足はありません。</p>
+    </div>
+    <div class="note">
+      <h3>残る落差</h3>
+      <p>立体だけ質感が上がるぶん、平面図・正面図のブロック表示との差は開きます。系統色を3Dのマテリアルにも通して繋いでいますが、気になるようなら三面図側の描き込みも上げられます。</p>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   部品定義 — ゲーム本体と同じ座標系
+   X:船首尾(+Xが船首) / Y:上下(+Yが下) / Z:左右
+   ============================================================ */
+var SYS = {command:"#3f7086", structure:"#4c5a62", prop:"#8d5c2b", power:"#3e7f5f", utility:"#6a5470"};
+
+var PARTS = {
+  cockpit: {name:"Mk1 コックピット", cat:"command",   w:2,h:1,d:1,
+            geo:"LatheGeometry ×1 / SphereGeometry ×1 / TorusGeometry ×2",
+            aim:"回転体で機首の絞りを出し、天面に半球のキャノピーを乗せる"},
+  spine:   {name:"船体スパイン",     cat:"structure", w:2,h:1,d:1,
+            geo:"BoxGeometry ×9 / TorusGeometry ×3",
+            aim:"角材の骨組みと環状フレーム。中身が詰まって見えないようにする"},
+  chem:    {name:"化学ブースター",   cat:"prop",      w:2,h:1,d:1,
+            geo:"CylinderGeometry ×4（1つは開口ベル） / SphereGeometry ×1",
+            aim:"開口円錐の内側を見せて、推力の向きが形で分かるようにする"},
+  tank:    {name:"燃料タンク",       cat:"utility",   w:1,h:2,d:1,
+            geo:"CapsuleGeometry ×1 / TorusGeometry ×2 / BoxGeometry ×1",
+            aim:"カプセル1本で耐圧タンクらしい曲面。締結バンドで縮尺を示す"},
+  solar:   {name:"ソーラーウィング", cat:"power",     w:1,h:2,d:1,
+            geo:"BoxGeometry ×8 / CylinderGeometry ×1",
+            aim:"薄板＋桟＋支柱。厚みを持たせず、面の向きで発電面を見せる"},
+  rad:     {name:"放熱フィン",       cat:"utility",   w:1,h:2,d:1,
+            geo:"CylinderGeometry ×1 / BoxGeometry ×7",
+            aim:"櫛状の薄板。隙間があることで熱を捨てる装置だと分かる"}
+};
+var GAL_ORDER = ["cockpit","spine","chem","tank","solar","rad"];
+
+/* 比較用の小型船（配置はゲームのグリッド座標） */
+var SHIP = [
+  {id:"chem",    x:0, y:2, z:2},
+  {id:"spine",   x:2, y:2, z:2},
+  {id:"rad",     x:3, y:0, z:2},
+  {id:"tank",    x:4, y:1, z:2},
+  {id:"solar",   x:4, y:1, z:1},
+  {id:"solar",   x:4, y:1, z:3},
+  {id:"cockpit", x:5, y:2, z:2}
+];
+
+/* 船の外接箱の中心（両方のパネルで同じ位置を中心にする） */
+var BB = (function(){
+  var a = {x0:99,y0:99,z0:99,x1:-99,y1:-99,z1:-99};
+  SHIP.forEach(function(s){
+    var p = PARTS[s.id];
+    a.x0 = Math.min(a.x0, s.x); a.x1 = Math.max(a.x1, s.x+p.w);
+    a.y0 = Math.min(a.y0, s.y); a.y1 = Math.max(a.y1, s.y+p.h);
+    a.z0 = Math.min(a.z0, s.z); a.z1 = Math.max(a.z1, s.z+p.d);
+  });
+  return {cx:(a.x0+a.x1)/2, cy:(a.y0+a.y1)/2, cz:(a.z0+a.z1)/2,
+          span:Math.max(a.x1-a.x0, a.y1-a.y0, a.z1-a.z0)};
+})();
+
+/* ============================================================
+   共有カメラ — CSS側の rotateX/rotateY と Three側を同じ値で駆動
+   ============================================================ */
+var CAM0 = {rx:-22, ry:-32, px:0, py:0, zoom:1};
+var cam = {rx:CAM0.rx, ry:CAM0.ry, px:CAM0.px, py:CAM0.py, zoom:CAM0.zoom};
+var spinning = false;
+function clampZoom(z){ return Math.max(0.4, Math.min(3.2, z)); }
+function normDeg(d){ return ((d % 360) + 360) % 360; }
+
+/* ============================================================
+   左: 現行の CSS 3D（板6枚の箱）
+   ============================================================ */
+var CSS_CELL = 34;
+var elCssScene = document.getElementById("cssScene");
+
+function shade(hex, k){
+  var n = parseInt(hex.slice(1),16);
+  var r = Math.min(255, Math.round(((n>>16)&255)*k));
+  var g = Math.min(255, Math.round(((n>>8)&255)*k));
+  var b = Math.min(255, Math.round((n&255)*k));
+  return "rgb("+r+","+g+","+b+")";
+}
+
+function buildCss(){
+  elCssScene.innerHTML = "";
+  var C = CSS_CELL;
+  var pivot = document.createElement("div");
+  pivot.className = "css-pivot";
+  pivot.style.transform = "translate3d("+(-BB.cx*C)+"px,"+(-BB.cy*C)+"px,"+(-BB.cz*C)+"px)";
+  SHIP.forEach(function(s){
+    var p = PARTS[s.id], base = SYS[p.cat];
+    var wrap = document.createElement("div");
+    wrap.style.position = "absolute";
+    wrap.style.transformStyle = "preserve-3d";
+    var x = s.x*C, y = s.y*C, z = s.z*C, w = p.w*C, h = p.h*C, d = p.d*C;
+    function face(fw, fh, tf, k){
+      var f = document.createElement("div");
+      f.className = "css-face";
+      f.style.width = fw+"px"; f.style.height = fh+"px";
+      f.style.background = shade(base, k);
+      f.style.transform = tf;
+      wrap.appendChild(f);
+    }
+    face(w, h, "translate3d("+x+"px,"+y+"px,"+(z+d)+"px)", 0.94);
+    face(w, h, "translate3d("+x+"px,"+y+"px,"+z+"px)", 0.58);
+    face(d, h, "translate3d("+(x+w)+"px,"+y+"px,"+z+"px) rotateY(-90deg)", 0.78);
+    face(d, h, "translate3d("+x+"px,"+y+"px,"+z+"px) rotateY(-90deg)", 0.5);
+    face(w, d, "translate3d("+x+"px,"+y+"px,"+z+"px) rotateX(90deg)", 1.16);
+    face(w, d, "translate3d("+x+"px,"+(y+h)+"px,"+z+"px) rotateX(90deg)", 0.44);
+    pivot.appendChild(wrap);
+  });
+  elCssScene.appendChild(pivot);
+}
+
+function applyCss(){
+  elCssScene.style.transform =
+    "translate("+Math.round(cam.px)+"px,"+Math.round(cam.py)+"px) scale("+cam.zoom.toFixed(3)+") "+
+    "rotateX("+cam.rx.toFixed(1)+"deg) rotateY("+cam.ry.toFixed(1)+"deg)";
+}
+
+/* ============================================================
+   右: Three.js
+   ============================================================ */
+var THREE_OK = typeof window.THREE !== "undefined";
+var FOV = 16;
+var renderer, scene, camera, shipGroup;
+var galRenderer, galScene, galCamera, galItems = [];
+
+function mixHex(hex, other, t){
+  var a = parseInt(hex.slice(1),16), b = parseInt(other.slice(1),16);
+  var r = Math.round((((a>>16)&255)*(1-t)) + (((b>>16)&255)*t));
+  var g = Math.round((((a>>8)&255)*(1-t)) + (((b>>8)&255)*t));
+  var c = Math.round(((a&255)*(1-t)) + ((b&255)*t));
+  return (r<<16)|(g<<8)|c;
+}
+
+/* 系統色は残しつつ金属寄りに寄せる。塗り分けの意味は失わない。 */
+function hull(cat){
+  return new THREE.MeshStandardMaterial({
+    color: mixHex(SYS[cat], "#4a555c", 0.30), roughness:0.6, metalness:0.5
+  });
+}
+function accent(cat){
+  return new THREE.MeshStandardMaterial({
+    color: mixHex(SYS[cat], "#ffffff", 0.14), roughness:0.42, metalness:0.7
+  });
+}
+function dark(){
+  return new THREE.MeshStandardMaterial({ color:0x1a242b, roughness:0.85, metalness:0.3 });
+}
+function glow(hex, i){
+  return new THREE.MeshStandardMaterial({
+    color:hex, emissive:hex, emissiveIntensity:(i===undefined?1.5:i), roughness:0.4, metalness:0.1
+  });
+}
+
+function mesh(geo, mat){ return new THREE.Mesh(geo, mat); }
+
+/* --- 各部品。局所座標は原点中心、寸法は (w,h,d)。+Yが下。 --- */
+var MODEL = {};
+
+MODEL.cockpit = function(){
+  var g = new THREE.Group(), m = hull("command");
+  var prof = [[0,0],[0.30,0.02],[0.42,0.13],[0.46,0.5],[0.45,1.1],[0.37,1.52],[0.23,1.84],[0.09,1.97],[0,2]];
+  var pts = prof.map(function(p){ return new THREE.Vector2(p[0], p[1]); });
+  var body = new THREE.LatheGeometry(pts, 22);
+  body.rotateZ(-Math.PI/2); body.translate(-1, 0, 0);
+  g.add(mesh(body, m));
+  var cp = new THREE.SphereGeometry(0.3, 18, 10, 0, Math.PI*2, 0, Math.PI/2);
+  cp.scale(1.45, 0.52, 0.82); cp.translate(0.3, 0.26, 0);
+  g.add(mesh(cp, new THREE.MeshStandardMaterial({
+    color:0x2f6f88, emissive:0x11323f, roughness:0.16, metalness:0.35
+  })));
+  [ -0.62, -0.14 ].forEach(function(px){
+    var r = new THREE.TorusGeometry(0.455, 0.035, 8, 22);
+    r.rotateY(Math.PI/2); r.translate(px, 0, 0);
+    g.add(mesh(r, accent("command")));
+  });
+  var lamp = new THREE.SphereGeometry(0.075, 10, 8);
+  lamp.translate(-0.92, 0, 0);
+  g.add(mesh(lamp, glow(0xf0a53c, 2.2)));
+  return g;
+};
+
+MODEL.spine = function(){
+  var g = new THREE.Group(), m = hull("structure"), a = accent("structure");
+  var core = new THREE.BoxGeometry(1.94, 0.3, 0.3);
+  g.add(mesh(core, m));
+  [[-0.3,-0.3],[-0.3,0.3],[0.3,-0.3],[0.3,0.3]].forEach(function(o){
+    var rail = new THREE.BoxGeometry(1.94, 0.085, 0.085);
+    rail.translate(0, o[0], o[1]);
+    g.add(mesh(rail, a));
+  });
+  [-0.66, 0, 0.66].forEach(function(px){
+    var ring = new THREE.TorusGeometry(0.42, 0.045, 4, 4);
+    ring.rotateY(Math.PI/2); ring.rotateX(Math.PI/4); ring.translate(px, 0, 0);
+    g.add(mesh(ring, a));
+  });
+  [-0.33, 0.33].forEach(function(px){
+    var br = new THREE.BoxGeometry(0.62, 0.06, 0.06);
+    br.rotateZ(Math.PI/5); br.translate(px, 0, 0.3);
+    g.add(mesh(br, a));
+    var br2 = br.clone(); br2.translate(0, 0, -0.6);
+    g.add(mesh(br2, a));
+  });
+  return g;
+};
+
+MODEL.chem = function(){
+  var g = new THREE.Group(), m = hull("prop"), a = accent("prop");
+  var body = new THREE.CylinderGeometry(0.40, 0.44, 1.12, 22);
+  body.rotateZ(-Math.PI/2); body.translate(0.42, 0, 0);
+  g.add(mesh(body, m));
+  var collar = new THREE.CylinderGeometry(0.47, 0.47, 0.13, 22);
+  collar.rotateZ(-Math.PI/2); collar.translate(-0.16, 0, 0);
+  g.add(mesh(collar, a));
+  // 開口ベル: 絞り側(rTop)が +X、広がり側が -X
+  var bell = new THREE.CylinderGeometry(0.19, 0.47, 0.74, 22, 1, true);
+  bell.rotateZ(-Math.PI/2); bell.translate(-0.6, 0, 0);
+  g.add(mesh(bell, new THREE.MeshStandardMaterial({
+    color:0x33251a, roughness:0.5, metalness:0.85, side:THREE.DoubleSide
+  })));
+  var throat = new THREE.SphereGeometry(0.16, 12, 10);
+  throat.scale(0.7, 1, 1); throat.translate(-0.3, 0, 0);
+  g.add(mesh(throat, glow(0xff8b3a, 1.9)));
+  [0.28, -0.28].forEach(function(oz){
+    var pipe = new THREE.CylinderGeometry(0.05, 0.05, 1.0, 8);
+    pipe.rotateZ(-Math.PI/2); pipe.translate(0.42, 0.3, oz);
+    g.add(mesh(pipe, a));
+  });
+  return g;
+};
+
+MODEL.tank = function(){
+  var g = new THREE.Group();
+  var cap = new THREE.CapsuleGeometry(0.40, 1.14, 6, 20);
+  g.add(mesh(cap, hull("utility")));
+  [-0.36, 0.36].forEach(function(py){
+    var band = new THREE.TorusGeometry(0.415, 0.05, 8, 24);
+    band.rotateX(Math.PI/2); band.translate(0, py, 0);
+    g.add(mesh(band, accent("utility")));
+  });
+  var valve = new THREE.BoxGeometry(0.2, 0.16, 0.2);
+  valve.translate(0, 0.94, 0);
+  g.add(mesh(valve, dark()));
+  return g;
+};
+
+MODEL.solar = function(){
+  var g = new THREE.Group(), a = accent("power");
+  var panel = new THREE.BoxGeometry(0.055, 1.72, 0.84);
+  g.add(mesh(panel, new THREE.MeshStandardMaterial({
+    color:0x1b3f52, emissive:0x0d2733, roughness:0.28, metalness:0.6
+  })));
+  // 外枠と桟
+  [[0.86,0.03],[0.03,0.86]].forEach(function(){});
+  [-0.86, 0.86].forEach(function(py){
+    var bar = new THREE.BoxGeometry(0.075, 0.055, 0.87);
+    bar.translate(0, py, 0);
+    g.add(mesh(bar, a));
+  });
+  [-0.43, 0.43].forEach(function(pz){
+    var bar = new THREE.BoxGeometry(0.075, 1.75, 0.05);
+    bar.translate(0, 0, pz);
+    g.add(mesh(bar, a));
+  });
+  [-0.57, 0, 0.57].forEach(function(py){
+    var rib = new THREE.BoxGeometry(0.07, 0.035, 0.86);
+    rib.translate(0, py, 0);
+    g.add(mesh(rib, a));
+  });
+  var strut = new THREE.CylinderGeometry(0.055, 0.055, 0.86, 10);
+  strut.rotateX(Math.PI/2);
+  g.add(mesh(strut, hull("structure")));
+  return g;
+};
+
+MODEL.rad = function(){
+  var g = new THREE.Group();
+  var spine = new THREE.CylinderGeometry(0.085, 0.085, 1.9, 12);
+  g.add(mesh(spine, hull("utility")));
+  for(var i=0;i<7;i++){
+    var py = -0.78 + i*0.26;
+    var fin = new THREE.BoxGeometry(0.78, 0.032, 0.78);
+    fin.translate(0, py, 0);
+    g.add(mesh(fin, new THREE.MeshStandardMaterial({
+      color:0x55606a, roughness:0.55, metalness:0.7
+    })));
+  }
+  var hot = new THREE.CylinderGeometry(0.1, 0.1, 0.5, 12);
+  g.add(mesh(hot, glow(0x7fd6a6, 0.55)));
+  return g;
+};
+
+function buildPart(id){
+  var g = MODEL[id]();
+  g.traverse(function(o){ if(o.isMesh){ o.castShadow = false; o.receiveShadow = false; } });
+  return g;
+}
+
+function addLights(sc, strength){
+  var s = strength === undefined ? 1 : strength;
+  sc.add(new THREE.HemisphereLight(0x9fc4d4, 0x090f13, 0.85*s));
+  var key = new THREE.DirectionalLight(0xfff2e0, 2.1*s);
+  key.position.set(4, 6, 5);
+  sc.add(key);
+  var rim = new THREE.DirectionalLight(0xf0a53c, 0.85*s);
+  rim.position.set(-5, 1.5, -4);
+  sc.add(rim);
+  var fill = new THREE.DirectionalLight(0x6fb6cf, 0.5*s);
+  fill.position.set(-2, -4, 3);
+  sc.add(fill);
+}
+
+function initThree(){
+  var cv = document.getElementById("cv");
+  renderer = new THREE.WebGLRenderer({canvas:cv, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.18;
+
+  scene = new THREE.Scene();
+  addLights(scene);
+
+  shipGroup = new THREE.Group();
+  SHIP.forEach(function(s){
+    var p = PARTS[s.id];
+    var g = buildPart(s.id);
+    g.position.set(s.x + p.w/2 - BB.cx, -(s.y + p.h/2 - BB.cy), s.z + p.d/2 - BB.cz);
+    shipGroup.add(g);
+  });
+  scene.add(shipGroup);
+
+  /* CSS 側は perspective:1500px。パネル高さ420pxなら実効の垂直画角は
+     2*atan(210/1500) ≒ 16°。遠近の強さを合わせないと同じ角度でも別物に見える。 */
+  camera = new THREE.PerspectiveCamera(FOV, 1, 0.5, 400);
+  camera.up.set(0, 1, 0);
+}
+
+/* CSS の rotateX/rotateY と同じ見え方になるカメラ位置 */
+function applyThree(){
+  if(!renderer) return;
+  var pane = document.getElementById("paneThree");
+  var w = pane.clientWidth, h = pane.clientHeight;
+  if(w === 0 || h === 0) return;
+  if(renderer.domElement.width !== Math.floor(w*renderer.getPixelRatio()) ||
+     renderer.domElement.height !== Math.floor(h*renderer.getPixelRatio())){
+    renderer.setSize(w, h, false);
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+  }
+  var rx = cam.rx*Math.PI/180, ry = cam.ry*Math.PI/180;
+  var half = Math.tan(FOV*Math.PI/360);
+  var dist = (BB.span * 0.82 / half) / cam.zoom;
+  /* CSS は screen = Rx(rx)·Ry(ry)·p、Three 側はモデルを Y 反転して持つので
+     見え方が一致する視線は Rx(-rx)·Ry(ry) の逆向き。rx の符号だけが変わる。 */
+  var dir = new THREE.Vector3(-Math.cos(rx)*Math.sin(ry), -Math.sin(rx), Math.cos(rx)*Math.cos(ry));
+  var target = new THREE.Vector3(0,0,0);
+
+  /* 平行移動はCSS側が画面ピクセル単位なので、同じ量だけ動くよう
+     注視点の距離における「1pxあたりのワールド長」に換算する。 */
+  var right = new THREE.Vector3().crossVectors(camera.up, dir).normalize();
+  var up = new THREE.Vector3().crossVectors(dir, right).normalize();
+  var worldPerPx = (2 * dist * half) / h;
+  target.addScaledVector(right, -cam.px * worldPerPx).addScaledVector(up, cam.py * worldPerPx);
+
+  camera.position.copy(target).addScaledVector(dir, dist);
+  camera.lookAt(target);
+  renderer.render(scene, camera);
+}
+
+/* ---------- 部品ギャラリー ---------- */
+function initGallery(){
+  var cv = document.getElementById("gal");
+  galRenderer = new THREE.WebGLRenderer({canvas:cv, antialias:true, alpha:true});
+  galRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  galRenderer.outputColorSpace = THREE.SRGBColorSpace;
+  galRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+  galRenderer.toneMappingExposure = 1.28;
+  galScene = new THREE.Scene();
+  addLights(galScene, 1.05);
+  galCamera = new THREE.OrthographicCamera(-1,1,1,-1,-60,60);
+  galCamera.position.set(2.6, 2.0, 3.4);
+  galCamera.lookAt(0,0,0);
+  /* 斜めから見る正射影では、ワールドのXに沿って並べると画面上で斜めにずれる。
+     カメラの右/上ベクトルに沿って置くこと。 */
+  var gd = new THREE.Vector3(2.6, 2.0, 3.4).normalize();
+  GAL_AXIS = {right:new THREE.Vector3(), up:new THREE.Vector3()};
+  GAL_AXIS.right.crossVectors(new THREE.Vector3(0,1,0), gd).normalize();
+  GAL_AXIS.up.crossVectors(gd, GAL_AXIS.right).normalize();
+  GAL_ORDER.forEach(function(id){
+    var holder = new THREE.Group();
+    var g = buildPart(id);
+    holder.add(g);
+    galScene.add(holder);
+    galItems.push({id:id, holder:holder, inner:g});
+  });
+}
+
+var GAL_AXIS = null;
+var galCols = 6;
+function layoutGallery(){
+  if(!galRenderer) return;
+  var cv = document.getElementById("gal");
+  var w = cv.clientWidth, h = cv.clientHeight;
+  if(w === 0 || h === 0) return;
+  galRenderer.setSize(w, h, false);
+  var cols = w < 560 ? 2 : (w < 860 ? 3 : 6);
+  if(cols !== galCols){
+    galCols = cols;
+    renderGalLabels();
+  }
+  var rows = Math.ceil(galItems.length / cols);
+  var cell = 2.9;
+  galItems.forEach(function(it, i){
+    var c = i % cols, r = Math.floor(i / cols);
+    var ox = (c - (cols-1)/2) * cell, oy = -(r - (rows-1)/2) * cell;
+    it.holder.position.set(0,0,0)
+      .addScaledVector(GAL_AXIS.right, ox)
+      .addScaledVector(GAL_AXIS.up, oy);
+  });
+  var halfW = cols * cell / 2, halfH = rows * cell / 2;
+  var aspect = w/h;
+  if(halfW/halfH > aspect) halfH = halfW/aspect; else halfW = halfH*aspect;
+  galCamera.left = -halfW; galCamera.right = halfW;
+  galCamera.top = halfH;   galCamera.bottom = -halfH;
+  galCamera.updateProjectionMatrix();
+}
+
+function renderGalLabels(){
+  var host = document.getElementById("galLabels");
+  host.style.gridTemplateColumns = "repeat(" + galCols + ",minmax(0,1fr))";
+  host.innerHTML = GAL_ORDER.map(function(id){
+    var p = PARTS[id];
+    return '<div style="--sys:'+SYS[p.cat]+'"><span></span><b>'+p.name+'</b><i>'+p.w+'×'+p.h+'×'+p.d+'</i></div>';
+  }).join("");
+}
+
+/* ============================================================
+   入力（両パネル共通）
+   ============================================================ */
+function bindPane(el){
+  var ptrs = {}, mode = null, last = null, pinch = 0;
+  function ids(){ return Object.keys(ptrs); }
+  el.addEventListener("pointerdown", function(ev){
+    ptrs[ev.pointerId] = {x:ev.clientX, y:ev.clientY};
+    var n = ids();
+    if(n.length === 1){
+      mode = (ev.shiftKey || ev.button === 1 || ev.button === 2) ? "pan" : "orbit";
+      last = {x:ev.clientX, y:ev.clientY};
+      el.classList.add("grabbing");
+    }else if(n.length === 2){
+      var a = ptrs[n[0]], b = ptrs[n[1]];
+      mode = "pinch";
+      pinch = Math.hypot(a.x-b.x, a.y-b.y) || 1;
+      last = {x:(a.x+b.x)/2, y:(a.y+b.y)/2};
+    }
+    try{ el.setPointerCapture(ev.pointerId); }catch(e){}
+    ev.preventDefault();
+  });
+  el.addEventListener("pointermove", function(ev){
+    if(!ptrs[ev.pointerId] || !mode) return;
+    ptrs[ev.pointerId] = {x:ev.clientX, y:ev.clientY};
+    var n = ids();
+    if(mode === "pinch" && n.length >= 2){
+      var a = ptrs[n[0]], b = ptrs[n[1]];
+      var dist = Math.hypot(a.x-b.x, a.y-b.y) || 1;
+      var mid = {x:(a.x+b.x)/2, y:(a.y+b.y)/2};
+      cam.zoom = clampZoom(cam.zoom * (dist/pinch));
+      cam.px += mid.x - last.x; cam.py += mid.y - last.y;
+      pinch = dist; last = mid;
+    }else{
+      var dx = ev.clientX - last.x, dy = ev.clientY - last.y;
+      if(mode === "pan"){ cam.px += dx; cam.py += dy; }
+      else {
+        cam.ry += dx * 0.42;
+        cam.rx = Math.max(-88, Math.min(88, cam.rx - dy * 0.42));
+      }
+      last = {x:ev.clientX, y:ev.clientY};
+    }
+    sync();
+  });
+  function end(ev){
+    delete ptrs[ev.pointerId];
+    if(!ids().length){ mode = null; el.classList.remove("grabbing"); }
+  }
+  el.addEventListener("pointerup", end);
+  el.addEventListener("pointercancel", end);
+  el.addEventListener("contextmenu", function(ev){ ev.preventDefault(); });
+  el.addEventListener("wheel", function(ev){
+    ev.preventDefault();
+    var dy = ev.deltaY * (ev.deltaMode === 1 ? 16 : ev.deltaMode === 2 ? 400 : 1);
+    cam.zoom = clampZoom(cam.zoom * Math.exp(-Math.max(-240, Math.min(240, dy)) * 0.0012));
+    sync();
+  }, {passive:false});
+}
+
+function sync(){
+  applyCss();
+  applyThree();
+  document.getElementById("camRead").textContent =
+    "方位 " + Math.round(normDeg(-cam.ry)) + "° · 仰角 " + Math.round(-cam.rx) + "° · " + Math.round(cam.zoom*100) + "%";
+}
+
+/* ============================================================
+   起動
+   ============================================================ */
+function fail(msg){
+  ["threeNotice","galNotice"].forEach(function(id){
+    var el = document.getElementById(id);
+    el.hidden = false;
+    el.innerHTML = msg;
+  });
+}
+
+buildCss();
+bindPane(document.getElementById("paneCss"));
+bindPane(document.getElementById("paneThree"));
+
+document.getElementById("tblBody").innerHTML = GAL_ORDER.map(function(id){
+  var p = PARTS[id];
+  return '<tr><td>'+p.name+'</td><td><code>'+p.geo.replace(/ \/ /g,'</code> <code>')+'</code></td><td>'+p.aim+'</td></tr>';
+}).join("");
+
+if(!THREE_OK){
+  fail("Three.js を読み込めませんでした。<br>cdnjs へのアクセスが遮断されている可能性があります。<br>左のCSS 3Dパネルは通常どおり動きます。");
+  renderGalLabels();
+  sync();
+}else{
+  var ok = true;
+  try{
+    initThree();
+    initGallery();
+  }catch(e){
+    ok = false;
+    fail("WebGL の初期化に失敗しました。<br>" + (e && e.message ? e.message : ""));
+  }
+  if(ok){
+    renderGalLabels();
+    layoutGallery();
+    sync();
+    var t0 = performance.now();
+    (function loop(now){
+      requestAnimationFrame(loop);
+      var dt = (now - t0)/1000; t0 = now;
+      if(spinning){ cam.ry += dt * 16; sync(); }
+      galItems.forEach(function(it, i){ it.inner.rotation.y += dt * (0.32 + i*0.012); });
+      galRenderer.render(galScene, galCamera);
+    })(performance.now());
+    window.addEventListener("resize", function(){ layoutGallery(); applyThree(); });
+  }
+}
+
+document.getElementById("bReset").addEventListener("click", function(){
+  cam.rx = CAM0.rx; cam.ry = CAM0.ry; cam.px = CAM0.px; cam.py = CAM0.py; cam.zoom = CAM0.zoom;
+  sync();
+});
+document.getElementById("bSpin").addEventListener("click", function(){
+  spinning = !spinning;
+  this.classList.toggle("on", spinning);
+});
+})();
+</script>
+</body>
+</html>
